@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TeamStor.Engine.Graphics;
 
 namespace TeamStor.Engine
 {
@@ -12,6 +13,9 @@ namespace TeamStor.Engine
     /// </summary>
     public class GameState
     {
+        /// <summary>
+        /// Game class of this state.
+        /// </summary>
         public Game Game;
 
         /// <summary>

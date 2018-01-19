@@ -3,16 +3,69 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Xna.Framework;
+using TeamStor.Engine.Graphics;
 
 namespace TeamStor.Engine
 {
     /// <summary>
     /// Main game class.
     /// </summary>
-    public class Game
+    public class Game : Microsoft.Xna.Framework.Game
     {
         private Microsoft.Xna.Framework.Game _monogameGame;
         private GameState _state;
+        private GameState _initialState;
+
+        private double _lastUpdateTime;
+        private double _accumTime;
+
+        /// <summary>
+        /// The amount of time passed since the game started.
+        /// </summary>
+        public double Time
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// The amount of time since the current and last update.
+        /// </summary>
+        public double DeltaTime
+        {
+            get
+            {
+                return Time - _lastUpdateTime;
+            }
+        }
+
+        /// <summary>
+        /// The total amount of updates that occured since the game started.
+        /// </summary>
+        public long TotalUpdates
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// The total amount of fixed updates that occured since the game started.
+        /// </summary>
+        public long TotalFixedUpdates
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// The default sprite batch used by the game.
+        /// </summary>
+        public SpriteBatch Batch
+        {
+            get;
+            private set;
+        }
 
         /// <summary>
         /// Current game state.
@@ -37,14 +90,59 @@ namespace TeamStor.Engine
             }
         }
 
+        /// <summary>
+        /// The number of fixed updates per second.
+        /// </summary>
+        public double FixedUpdatesPerSecond = 60;
+
         /// <param name="initialState">The state to start the game on.</param>
         /// <param name="showTeamStorLogo">If the Team Stor logo should be shown before starting the initial state.</param>
         public Game(GameState initialState, bool showTeamStorLogo = true)
         {
             if(showTeamStorLogo)
-                CurrentState = new Internal.TeamStorLogoState(initialState);
+                _initialState = new Internal.TeamStorLogoState(initialState);
             else
-                CurrentState = initialState;
+                _initialState = initialState;
+        }
+
+        protected override void LoadContent()
+        {
+            Batch = new SpriteBatch(this);
+            CurrentState = _initialState;
+        }
+
+        protected override void Update(GameTime gameTime)
+        {
+            Time = gameTime.TotalGameTime.TotalSeconds;
+
+            if(_lastUpdateTime == 0)
+                _lastUpdateTime = Time;
+
+            if(CurrentState != null)
+            {
+                CurrentState.Update(DeltaTime, Time, TotalUpdates);
+                TotalUpdates++;
+            }
+
+            _accumTime += DeltaTime;
+            while(_accumTime >= (1.0 / FixedUpdatesPerSecond))
+            {
+                if(CurrentState != null)
+                {
+                    CurrentState.FixedUpdate(TotalFixedUpdates);
+                    TotalFixedUpdates++;
+                }
+
+                _accumTime -= (1.0 / FixedUpdatesPerSecond);
+            }
+
+            _lastUpdateTime = Time;
+        }
+
+        protected override void Draw(GameTime gameTime)
+        {
+            if(CurrentState != null)
+                CurrentState.Draw(Batch, new Vector2(GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height));
         }
     }
 }

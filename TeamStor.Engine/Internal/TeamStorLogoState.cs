@@ -1,4 +1,8 @@
-﻿namespace TeamStor.Engine.Internal
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using SpriteBatch = TeamStor.Engine.Graphics.SpriteBatch;
+
+namespace TeamStor.Engine.Internal
 {
     public class TeamStorLogoState : GameState
     {
@@ -7,6 +11,10 @@
         public TeamStorLogoState(GameState initialState)
         {
             _initialState = initialState;
+        }
+
+        public override void Draw(SpriteBatch batch, Vector2 screenSize)
+        {
         }
     }
 }
