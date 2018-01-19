@@ -34,10 +34,10 @@ namespace TeamStor.Engine.Graphics
             {
                 if(value != _sortMode)
                 {
-                    _sortMode = value;
-                    
                     if(ItemsQueued)
                         ResetSpriteBatch();
+                    
+                    _sortMode = value;
                 }
             }
         }
@@ -54,10 +54,10 @@ namespace TeamStor.Engine.Graphics
             {
                 if(value != _blendState)
                 {
-                    _blendState = value;
-                    
                     if(ItemsQueued)
                         ResetSpriteBatch();
+                    
+                    _blendState = value;
                 }
             }
         }
@@ -73,11 +73,11 @@ namespace TeamStor.Engine.Graphics
             set
             {
                 if(value != _samplerState)
-                {
-                    _samplerState = value;
-                    
+                {            
                     if(ItemsQueued)
                         ResetSpriteBatch();
+                    
+                    _samplerState = value;
                 }
             }
         }
@@ -95,10 +95,10 @@ namespace TeamStor.Engine.Graphics
             {
                 if(value != _effect)
                 {
-                    _effect = value;
-                    
                     if(ItemsQueued)
                         ResetSpriteBatch();
+                    
+                    _effect = value;
                 }
             }
         }
@@ -115,15 +115,15 @@ namespace TeamStor.Engine.Graphics
             {
                 if(value != _transform)
                 {
-                    _transform = value;
-                    
                     if(ItemsQueued)
                         ResetSpriteBatch();
+                    
+                    _transform = value;
                 }
             }
         }
 
-        private Rectangle? _scissor = null;
+        private Rectangle? _scissor;
         
         /// <summary>
         /// Screen scissor to apply when drawing.
@@ -144,7 +144,7 @@ namespace TeamStor.Engine.Graphics
             }
         }
         
-        private RenderTarget2D _renderTarget = null;
+        private RenderTarget2D _renderTarget;
         
         /// <summary>
         /// Render target to draw to when drawing.
@@ -329,6 +329,24 @@ namespace TeamStor.Engine.Graphics
             }
 
             ItemsQueued = false;
+        }
+
+        /// <summary>
+        /// Resets the queue to it's default state.
+        /// </summary>
+        public void Reset()
+        {
+            _sortMode = SpriteSortMode.Deferred;
+            _blendState = BlendState.NonPremultiplied;
+            _samplerState = SamplerState.AnisotropicWrap;
+            _effect = null;
+            _transform = Matrix.Identity;
+            _scissor = null;
+            _renderTarget = null;
+            _rastState.ScissorTestEnable = false;
+            
+            if(ItemsQueued)
+                ResetSpriteBatch();
         }
     }
 }

@@ -141,6 +141,8 @@ namespace TeamStor.Engine
 
         protected override void Draw(GameTime gameTime)
         {
+            Batch.Reset();
+            
             if(CurrentState != null)
                 CurrentState.Draw(Batch, new Vector2(GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height));
         }
