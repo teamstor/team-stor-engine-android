@@ -79,7 +79,11 @@ namespace TeamStor.Engine
             set
             {
                 if(_state != null)
+                {
                     _state.OnLeave(value);
+                    Assets.OnStateChange();
+                }
+
                 if(value != null)
                 {
                     value.Game = this;
@@ -95,10 +99,22 @@ namespace TeamStor.Engine
         /// </summary>
         public double FixedUpdatesPerSecond = 60;
 
-        /// <param name="initialState">The state to start the game on.</param>
-        /// <param name="showTeamStorLogo">If the Team Stor logo should be shown before starting the initial state.</param>
-        public Game(GameState initialState, bool showTeamStorLogo = true)
+        /// <summary>
+        /// The assets manager.
+        /// </summary>
+        public AssetsManager Assets
         {
+            get;
+            private set;
+        }
+        
+        /// <param name="initialState">The state to start the game on.</param>
+        /// <param name="assetsDir">The assets directory.</param>
+        /// <param name="showTeamStorLogo">If the Team Stor logo should be shown before starting the initial state.</param>
+        public Game(GameState initialState, string assetsDir = "data", bool showTeamStorLogo = true)
+        {
+            Assets = new AssetsManager(this, assetsDir);
+            
             if(showTeamStorLogo)
                 _initialState = new Internal.TeamStorLogoState(initialState);
             else
@@ -109,6 +125,11 @@ namespace TeamStor.Engine
         {
             Batch = new SpriteBatch(this);
             CurrentState = _initialState;
+        }
+
+        protected override void UnloadContent()
+        {
+            Assets.Dispose();
         }
 
         protected override void Update(GameTime gameTime)

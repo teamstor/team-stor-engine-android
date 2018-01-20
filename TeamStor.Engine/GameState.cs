@@ -17,6 +17,14 @@ namespace TeamStor.Engine
         /// Game class of this state.
         /// </summary>
         public Game Game;
+        
+        /// <summary>
+        /// Game assets manager.
+        /// </summary>
+        public AssetsManager Assets
+        {
+            get { return Game.Assets; }
+        }
 
         /// <summary>
         /// Called when the state is entered.
