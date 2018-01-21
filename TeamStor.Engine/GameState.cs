@@ -35,7 +35,7 @@ namespace TeamStor.Engine
         /// <summary>
         /// Called when the state is left.
         /// </summary>
-        /// <param name="previousState">The next state, can be null</param>
+        /// <param name="nextState">The next state, can be null</param>
         public abstract void OnLeave(GameState nextState);
 
         /// <summary>

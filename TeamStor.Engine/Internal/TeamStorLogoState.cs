@@ -13,6 +13,22 @@ namespace TeamStor.Engine.Internal
             _initialState = initialState;
         }
 
+        public override void OnEnter(GameState previousState)
+        {
+        }
+
+        public override void OnLeave(GameState nextState)
+        {
+        }
+
+        public override void Update(double deltaTime, double totalTime, long count)
+        {
+        }
+
+        public override void FixedUpdate(long count)
+        {
+        }
+
         public override void Draw(SpriteBatch batch, Vector2 screenSize)
         {
         }

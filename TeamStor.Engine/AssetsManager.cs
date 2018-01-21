@@ -4,9 +4,13 @@ using System.IO;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Media;
+using TeamStor.Engine.Graphics;
 
 namespace TeamStor.Engine
 {
+	/// <summary>
+	/// Manages asset loading and unloading.
+	/// </summary>
 	public class AssetsManager : IDisposable
 	{
 		private struct LoadedAsset
@@ -107,6 +111,13 @@ namespace TeamStor.Engine
 						_loadedAssets.Add(name.ToLowerInvariant(), new LoadedAsset(asset, keepAfterStateChange));
 						return true;
 					}
+				}
+				
+				if(typeof(T) == typeof(Font))
+				{
+					asset = new Font(Game.GraphicsDevice, Directory + "/" + name) as T;
+					_loadedAssets.Add(name.ToLowerInvariant(), new LoadedAsset(asset, keepAfterStateChange));
+					return true;
 				}
 				
 				if(typeof(T) == typeof(SoundEffect))

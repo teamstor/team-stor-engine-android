@@ -14,6 +14,15 @@ namespace TeamStor.Engine.Graphics
         private Texture2D _emptyTexture;
 
         /// <summary>
+        /// GraphicsDevice used by this SpriteBatch.
+        /// </summary>
+        public GraphicsDevice Device
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
         /// If there are any items queued.
         /// </summary>
         public bool ItemsQueued
@@ -169,6 +178,7 @@ namespace TeamStor.Engine.Graphics
         public SpriteBatch(Game game)
         {
             _game = game;
+            Device = game.GraphicsDevice;
             
             _monoGameSpriteBatch = new Microsoft.Xna.Framework.Graphics.SpriteBatch(game.GraphicsDevice);
             _emptyTexture = new Texture2D(game.GraphicsDevice, 1, 1);

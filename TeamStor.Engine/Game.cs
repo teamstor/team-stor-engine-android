@@ -13,7 +13,6 @@ namespace TeamStor.Engine
     /// </summary>
     public class Game : Microsoft.Xna.Framework.Game
     {
-        private Microsoft.Xna.Framework.Game _monogameGame;
         private GameState _state;
         private GameState _initialState;
 
