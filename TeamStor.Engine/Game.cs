@@ -175,6 +175,13 @@ namespace TeamStor.Engine
         protected override void UnloadContent()
         {
             Assets.Dispose();
+            
+            DefaultFonts.Normal.Dispose();
+            DefaultFonts.Bold.Dispose();
+            DefaultFonts.ItalicNormal.Dispose();
+            DefaultFonts.ItalicBold.Dispose();
+            DefaultFonts.Mono.Dispose();
+            DefaultFonts.MonoBold.Dispose();
         }
 
         protected override void Update(GameTime gameTime)
