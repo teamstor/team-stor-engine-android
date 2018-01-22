@@ -179,7 +179,7 @@ namespace TeamStor.Engine
         /// <summary>
         /// Default fonts used by the engine.
         /// </summary>
-        public DefaultFontsCollection DefaultFonts;
+        public DefaultFontsCollection DefaultFonts = new DefaultFontsCollection();
 
         public class UpdateEventArgs : EventArgs
         {
