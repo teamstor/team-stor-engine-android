@@ -240,6 +240,49 @@ namespace TeamStor.Engine
         /// </summary>
         public event EventHandler<ChangeStateEventArgs> OnStateChange;
 
+        /// <summary>
+        /// If v-sync is enabled.
+        /// </summary>
+        public bool VSync
+        {
+            get { return _graphicsDeviceManager.SynchronizeWithVerticalRetrace; }
+            set
+            {
+                if(_graphicsDeviceManager.SynchronizeWithVerticalRetrace != value)
+                {
+                    _graphicsDeviceManager.SynchronizeWithVerticalRetrace = value;
+                    _graphicsDeviceManager.ApplyChanges();
+                }
+            }
+        }
+        
+        /// <summary>
+        /// If the game window is fullscreen.
+        /// </summary>
+        public bool Fullscreen
+        {
+            get { return _graphicsDeviceManager.IsFullScreen; }
+            set
+            {
+                if(_graphicsDeviceManager.IsFullScreen != value)
+                {
+                    _graphicsDeviceManager.IsFullScreen = value;
+                    
+                    if(_graphicsDeviceManager.IsFullScreen)
+                    {
+                        _graphicsDeviceManager.PreferredBackBufferWidth = GraphicsDevice.Adapter.CurrentDisplayMode.Width;
+                        _graphicsDeviceManager.PreferredBackBufferHeight = GraphicsDevice.Adapter.CurrentDisplayMode.Height;
+                    }
+                    else
+                    {
+                        _graphicsDeviceManager.PreferredBackBufferWidth = 960;
+                        _graphicsDeviceManager.PreferredBackBufferHeight = 540;
+                    }
+                    
+                    _graphicsDeviceManager.ApplyChanges();
+                }
+            }
+        }
         
         /// <param name="initialState">The state to start the game on.</param>
         /// <param name="assetsDir">The assets directory.</param>
@@ -264,6 +307,7 @@ namespace TeamStor.Engine
 
         private void OnPreparingDeviceSettings(object sender, PreparingDeviceSettingsEventArgs e)
         {
+            e.GraphicsDeviceInformation.PresentationParameters.IsFullScreen = false;
             e.GraphicsDeviceInformation.PresentationParameters.BackBufferWidth = 960;
             e.GraphicsDeviceInformation.PresentationParameters.BackBufferHeight = 540;
             e.GraphicsDeviceInformation.PresentationParameters.PresentationInterval = PresentInterval.Immediate;
