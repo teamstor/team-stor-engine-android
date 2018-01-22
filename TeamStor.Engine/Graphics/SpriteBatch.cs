@@ -319,7 +319,7 @@ namespace TeamStor.Engine.Graphics
                 Line(from, to, color, thickness);
             }
         }
-
+        
         /// <summary>
         /// Draws text with the specified font.
         /// </summary>
@@ -333,6 +333,59 @@ namespace TeamStor.Engine.Graphics
         public void Text(Font font, uint size, string text, Vector2 pos, Color color = default(Color), float lineMult = 1f, float spacing = 1f)
         {
             font.Draw(this, size, text, pos, color, lineMult, spacing);
+        }
+        
+        /// <summary>
+        /// Mirrored by Game.DefaultFonts
+        /// </summary>
+        public enum FontStyle
+        {
+            Normal,
+            Bold,
+            Italic,
+            ItalicBold,
+            Mono,
+            MonoBold
+        }
+        
+        /// <summary>
+        /// Draws text with the specified font style.
+        /// </summary>
+        /// <param name="font">The font to use.</param>
+        /// <param name="size">The font size.</param>
+        /// <param name="text">The text to draw.</param>
+        /// <param name="pos">The position to draw the text at.</param>
+        /// <param name="color">The color to draw the text with.</param>
+        /// <param name="lineMult">The line height multiplier.</param>
+        /// <param name="spacing">The spacing multiplier.</param>
+        public void Text(FontStyle fontStyle, uint size, string text, Vector2 pos, Color color = default(Color), float lineMult = 1f, float spacing = 1f)
+        {
+            Font font = _game.DefaultFonts.Normal;
+
+            switch(fontStyle)
+            {
+                case FontStyle.Bold:
+                    font = _game.DefaultFonts.Bold;
+                    break;
+                    
+                case FontStyle.Italic:
+                    font = _game.DefaultFonts.ItalicNormal;
+                    break;
+                    
+                case FontStyle.ItalicBold:
+                    font = _game.DefaultFonts.ItalicBold;
+                    break;
+                    
+                case FontStyle.Mono:
+                    font = _game.DefaultFonts.Mono;
+                    break;
+                    
+                case FontStyle.MonoBold:
+                    font = _game.DefaultFonts.MonoBold;
+                    break;
+            }
+            
+            Text(font, size, text, pos, color, lineMult, spacing);
         }
 
         /// <summary>

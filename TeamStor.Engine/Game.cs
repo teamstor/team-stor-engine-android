@@ -106,6 +106,44 @@ namespace TeamStor.Engine
             get;
             private set;
         }
+
+        public struct DefaultFontsStruct
+        {
+            /// <summary>
+            /// FreeSans
+            /// </summary>
+            public Font Normal;
+            
+            /// <summary>
+            /// FreeSans bold
+            /// </summary>
+            public Font Bold;
+            
+            /// <summary>
+            /// FreeSans italic
+            /// </summary>
+            public Font ItalicNormal;
+            
+            /// <summary>
+            /// FreeSans bold italic
+            /// </summary>
+            public Font ItalicBold;
+            
+            /// <summary>
+            /// Bitstream Vera Sans Mono
+            /// </summary>
+            public Font Mono;
+            
+            /// <summary>
+            /// Bitstream Vera Sans Bold
+            /// </summary>
+            public Font MonoBold;
+        }
+
+        /// <summary>
+        /// Default fonts used by the engine.
+        /// </summary>
+        public DefaultFontsStruct DefaultFonts;
         
         /// <param name="initialState">The state to start the game on.</param>
         /// <param name="assetsDir">The assets directory.</param>
@@ -123,6 +161,14 @@ namespace TeamStor.Engine
         protected override void LoadContent()
         {
             Batch = new SpriteBatch(this);
+            
+            DefaultFonts.Normal = new Font(GraphicsDevice, Assets.Directory + "/engine/FreeSans.ttf");
+            DefaultFonts.Bold = new Font(GraphicsDevice, Assets.Directory + "/engine/FreeSansBold.ttf");
+            DefaultFonts.ItalicNormal = new Font(GraphicsDevice, Assets.Directory + "/engine/FreeSansOblique.ttf");
+            DefaultFonts.ItalicBold = new Font(GraphicsDevice, Assets.Directory + "/engine/FreeSansBoldOblique.ttf");
+            DefaultFonts.Mono = new Font(GraphicsDevice, Assets.Directory + "/engine/VeraMono.ttf");
+            DefaultFonts.MonoBold = new Font(GraphicsDevice, Assets.Directory + "/engine/VeraMoBd.ttf");
+
             CurrentState = _initialState;
         }
 
