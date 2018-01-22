@@ -147,7 +147,10 @@ namespace TeamStor.Engine.Graphics
                     if(ItemsQueued)
                         ResetSpriteBatch();
 
-                    _rastState.ScissorTestEnable = value.HasValue;
+                    _rastState = new RasterizerState();
+                    _rastState.CullMode = CullMode.CullClockwiseFace;
+                    _rastState.ScissorTestEnable = _scissor.HasValue;
+
                     _scissor = value;
                 }
             }
@@ -193,6 +196,7 @@ namespace TeamStor.Engine.Graphics
             if(ItemsQueued)
                 End();
             _monoGameSpriteBatch.Begin(SortMode, BlendState, SamplerState, DepthStencilState.Default, _rastState, Effect, Transform);
+            ItemsQueued = true;
         }
         
         /// <summary>
@@ -421,6 +425,8 @@ namespace TeamStor.Engine.Graphics
             _transform = Matrix.Identity;
             _scissor = null;
             _renderTarget = null;
+            _rastState = new RasterizerState();
+            _rastState.CullMode = CullMode.CullClockwiseFace;
             _rastState.ScissorTestEnable = false;
             
             if(ItemsQueued)
