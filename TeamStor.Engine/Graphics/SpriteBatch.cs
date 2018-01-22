@@ -410,7 +410,7 @@ namespace TeamStor.Engine.Graphics
         }
 
         /// <summary>
-        /// Resets the queue to it's default state.
+        /// Resets the queue to its default state.
         /// </summary>
         public void Reset()
         {

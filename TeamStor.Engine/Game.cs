@@ -183,7 +183,7 @@ namespace TeamStor.Engine
 
         public class UpdateEventArgs : EventArgs
         {
-            public UpdateArgs(double deltaTime, double totalTime, long count)
+            public UpdateEventArgs(double deltaTime, double totalTime, long count)
             {
                 DeltaTime = deltaTime;
                 TotalTime = totalTime;
