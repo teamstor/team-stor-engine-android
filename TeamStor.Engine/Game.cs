@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -24,6 +25,12 @@ namespace TeamStor.Engine
 
         private long _framesSinceLastFpsReset;
         private double _accumTimeSinceLastFpsReset;
+
+        private double _timeInUpdate;
+        private double _timeInFixedUpdate;
+        private double _timeInDraw;
+
+        private string _snälla = "snälla";
         
         private GraphicsDeviceManager _graphicsDeviceManager;
 
@@ -41,10 +48,8 @@ namespace TeamStor.Engine
         /// </summary>
         public double DeltaTime
         {
-            get
-            {
-                return Time - _lastUpdateTime;
-            }
+            get;
+            private set;
         }
 
         /// <summary>
@@ -74,15 +79,18 @@ namespace TeamStor.Engine
             private set;
         }
 
-        /// <summary>
-        /// If FPS should be drawn on screen.
-        /// Toggle with F5.
-        /// </summary>
-        public bool DrawFPS
+        [Flags]
+        public enum DebugStats : byte
         {
-            get;
-            private set;
+            FPS = 1,
+            General = 2,
+            SpriteBatch = 4
         }
+
+        /// <summary>
+        /// Debug stats to draw.
+        /// </summary>
+        public DebugStats Stats = 0;
 
         /// <summary>
         /// The default sprite batch used by the game.
@@ -146,32 +154,32 @@ namespace TeamStor.Engine
         public class DefaultFontsCollection
         {
             /// <summary>
-            /// FreeSans
+            /// Proxima Nova
             /// </summary>
             public Font Normal;
             
             /// <summary>
-            /// FreeSans bold
+            /// Proxima Nova bold
             /// </summary>
             public Font Bold;
             
             /// <summary>
-            /// FreeSans italic
+            /// Proxima Nova italic
             /// </summary>
             public Font Italic;
             
             /// <summary>
-            /// FreeSans bold italic
+            /// Proxima Nova bold italic
             /// </summary>
             public Font ItalicBold;
             
             /// <summary>
-            /// Bitstream Vera Sans Mono
+            /// Inconsolata
             /// </summary>
             public Font Mono;
             
             /// <summary>
-            /// Bitstream Vera Sans Bold
+            /// Inconsolata Bold
             /// </summary>
             public Font MonoBold;
         }
@@ -289,9 +297,7 @@ namespace TeamStor.Engine
             {
                 if(_graphicsDeviceManager.IsFullScreen != value)
                 {
-                    _graphicsDeviceManager.IsFullScreen = value;
-                    
-                    if(_graphicsDeviceManager.IsFullScreen)
+                    if(value)
                     {
                         _graphicsDeviceManager.PreferredBackBufferWidth = GraphicsDevice.Adapter.CurrentDisplayMode.Width;
                         _graphicsDeviceManager.PreferredBackBufferHeight = GraphicsDevice.Adapter.CurrentDisplayMode.Height;
@@ -302,6 +308,7 @@ namespace TeamStor.Engine
                         _graphicsDeviceManager.PreferredBackBufferHeight = 540;
                     }
                     
+                    _graphicsDeviceManager.IsFullScreen = value;
                     _graphicsDeviceManager.ApplyChanges();
                 }
             }
@@ -340,12 +347,12 @@ namespace TeamStor.Engine
         {            
             Batch = new SpriteBatch(this);
             
-            DefaultFonts.Normal = new Font(GraphicsDevice, Assets.Directory + "/engine/FreeSans.ttf");
-            DefaultFonts.Bold = new Font(GraphicsDevice, Assets.Directory + "/engine/FreeSansBold.ttf");
-            DefaultFonts.Italic = new Font(GraphicsDevice, Assets.Directory + "/engine/FreeSansOblique.ttf");
-            DefaultFonts.ItalicBold = new Font(GraphicsDevice, Assets.Directory + "/engine/FreeSansBoldOblique.ttf");
-            DefaultFonts.Mono = new Font(GraphicsDevice, Assets.Directory + "/engine/VeraMono.ttf");
-            DefaultFonts.MonoBold = new Font(GraphicsDevice, Assets.Directory + "/engine/VeraMoBd.ttf");
+            DefaultFonts.Normal = new Font(GraphicsDevice, Assets.Directory + "/engine/ProximaNova-Regular.otf");
+            DefaultFonts.Bold = new Font(GraphicsDevice, Assets.Directory + "/engine/ProximaNova-Bold.otf");
+            DefaultFonts.Italic = new Font(GraphicsDevice, Assets.Directory + "/engine/ProximaNova-RegularIt.otf");
+            DefaultFonts.ItalicBold = new Font(GraphicsDevice, Assets.Directory + "/engine/ProximaNova-BoldIt.otf");
+            DefaultFonts.Mono = new Font(GraphicsDevice, Assets.Directory + "/engine/Inconsolata-Regular.ttf");
+            DefaultFonts.MonoBold = new Font(GraphicsDevice, Assets.Directory + "/engine/Inconsolata-Bold.ttf");
 
             CurrentState = _initialState;
         }
@@ -364,28 +371,51 @@ namespace TeamStor.Engine
 
         protected override void Update(GameTime gameTime)
         {
+            Stopwatch watch = new Stopwatch();
             Time = gameTime.TotalGameTime.TotalSeconds;
 
             if(_lastUpdateTime == 0)
                 _lastUpdateTime = Time;
 
-            if(CurrentState != null)
-            {
-                if(OnUpdateBeforeState != null)
-                    OnUpdateBeforeState(this, new UpdateEventArgs(DeltaTime, Time, TotalUpdates));
-                
+            DeltaTime = Time - _lastUpdateTime;
+
+            if(OnUpdateBeforeState != null)
+                OnUpdateBeforeState(this, new UpdateEventArgs(DeltaTime, Time, TotalUpdates));
+
+            if(CurrentState != null)        
                 CurrentState.Update(DeltaTime, Time, TotalUpdates);
-                TotalUpdates++;
-                
-                if(OnUpdateAfterState != null)
-                    OnUpdateAfterState(this, new UpdateEventArgs(DeltaTime, Time, TotalUpdates));
+            
+            TotalUpdates++;
+
+            if(OnUpdateAfterState != null)
+                OnUpdateAfterState(this, new UpdateEventArgs(DeltaTime, Time, TotalUpdates));
+            
+            if(Input.KeyPressed(Keys.F1))
+            {
+                if(Stats.HasFlag(DebugStats.FPS))
+                    Stats &= ~DebugStats.FPS;
+                else 
+                    Stats |= DebugStats.FPS;
+            }
+            
+            if(Input.KeyPressed(Keys.F2))
+            {
+                if(Stats.HasFlag(DebugStats.General))
+                    Stats &= ~DebugStats.General;
+                else 
+                    Stats |= DebugStats.General;
+            }
+            
+            if(Input.KeyPressed(Keys.F3))
+            {
+                if(Stats.HasFlag(DebugStats.SpriteBatch))
+                    Stats &= ~DebugStats.SpriteBatch;
+                else 
+                    Stats |= DebugStats.SpriteBatch;
             }
             
             if(Input.KeyPressed(Keys.F4))
                 Fullscreen = !Fullscreen;
-
-            if(Input.KeyPressed(Keys.F5))
-                DrawFPS = !DrawFPS;
 
             _accumTime += DeltaTime;
             _framesSinceLastFpsReset++;
@@ -393,27 +423,36 @@ namespace TeamStor.Engine
 
             if(_accumTimeSinceLastFpsReset >= 1.0)
             {
+                if(CurrentState == null)
+                    _snälla = _snälla.Substring(0, _snälla.Length - 1) + "la";
+                
                 FPS = _framesSinceLastFpsReset;
                 _framesSinceLastFpsReset = 0;
                 _accumTimeSinceLastFpsReset -= 1.0;
             }
             
+            watch.Stop();
+            _timeInUpdate = watch.Elapsed.TotalMilliseconds;
+            watch.Start();
+            
             while(_accumTime >= (1.0 / FixedUpdatesPerSecond))
             {
+                if(OnFixedUpdateBeforeState != null)
+                    OnFixedUpdateBeforeState(this, new FixedUpdateEventArgs(TotalFixedUpdates));
+
                 if(CurrentState != null)
-                {
-                    if(OnFixedUpdateBeforeState != null)
-                        OnFixedUpdateBeforeState(this, new FixedUpdateEventArgs(TotalFixedUpdates));
-
                     CurrentState.FixedUpdate(TotalFixedUpdates);
-                    TotalFixedUpdates++;
+                
+                TotalFixedUpdates++;
                     
-                    if(OnFixedUpdateAfterState != null)
-                        OnFixedUpdateAfterState(this, new FixedUpdateEventArgs(TotalFixedUpdates));
-                }
-
+                if(OnFixedUpdateAfterState != null)
+                    OnFixedUpdateAfterState(this, new FixedUpdateEventArgs(TotalFixedUpdates));
+                
                 _accumTime -= (1.0 / FixedUpdatesPerSecond);
             }
+
+            watch.Stop();
+            _timeInFixedUpdate = watch.Elapsed.TotalMilliseconds;
 
             _lastUpdateTime = Time;
             
@@ -422,28 +461,78 @@ namespace TeamStor.Engine
 
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(new Color(0.1f, 0.1f, 0.1f));
+            Stopwatch watch = new Stopwatch();
+            watch.Start();
+            
+            GraphicsDevice.Clear(new Color(0.15f, 0.15f, 0.15f));
             
             Vector2 viewport = new Vector2(GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height);
             if(CurrentState != null)
                 CurrentState.Draw(Batch, viewport);
-            
+                        
             Batch.Reset();
+            
+            watch.Stop();
+            _timeInDraw = watch.Elapsed.TotalMilliseconds;
 
             if(CurrentState == null)
             {
-                Vector2 measure = DefaultFonts.Italic.Measure(32, "No GameState set (fixa snälla)");
-                
+                Vector2 measure = DefaultFonts.Italic.Measure(24, "No GameState set (fixa " + _snälla + ")");
+
                 Batch.Text(
-                    SpriteBatch.FontStyle.Italic, 
-                    32, 
-                    "No GameState set (fixa snälla)", 
+                    SpriteBatch.FontStyle.Normal, 
+                    24, 
+                    "No GameState set (fixa " + _snälla + ")", 
                     new Vector2(viewport.X / 2 - measure.X / 2, viewport.Y / 2 - measure.Y / 2),
                     new Color(0.9f, 0.9f, 0.9f));
             }
+
+            if(Stats != 0)
+            {
+                int y = 10;
+                
+                if(Stats.HasFlag(DebugStats.FPS))
+                {
+                    Batch.Text(SpriteBatch.FontStyle.Mono, 16, "FPS: " + FPS, new Vector2(10, y), Color.PaleGoldenrod);
+                    y += 24;
+                }
+                
+                if(Stats.HasFlag(DebugStats.General))
+                {
+                    Batch.Text(SpriteBatch.FontStyle.Mono, 16, Math.Round(_timeInUpdate + _timeInFixedUpdate + _timeInDraw, 2) + " ms", new Vector2(10, y), Color.Aquamarine);
+                    y += 24;
+                    
+                    Batch.Text(SpriteBatch.FontStyle.Mono, 16, "Update " + Math.Round(_timeInUpdate, 1) + " ms", new Vector2(10, y), Color.Aquamarine);
+                    y += 18;
+                    Batch.Text(SpriteBatch.FontStyle.Mono, 16, "FixedUpdate " + Math.Round(_timeInFixedUpdate, 1) + " ms", new Vector2(10, y), Color.Aquamarine);
+                    y += 18;
+                    Batch.Text(SpriteBatch.FontStyle.Mono, 16, "Draw " + Math.Round(_timeInDraw, 1) + " ms", new Vector2(10, y), Color.Aquamarine);
+                    y += 24;
+                    
+                    Batch.Text(SpriteBatch.FontStyle.Mono, 16, "Game state: " + (CurrentState == null ? "(none)" : CurrentState.GetType().Name), new Vector2(10, y), Color.Aquamarine);
+                    y += 18;
+                    Batch.Text(SpriteBatch.FontStyle.Mono, 16, "Time since start: " + Math.Round(Time, 1) + " s", new Vector2(10, y), Color.Aquamarine);
+                    y += 18;
+                    Batch.Text(SpriteBatch.FontStyle.Mono, 16, "Updates since start: " + TotalUpdates, new Vector2(10, y), Color.Aquamarine);
+                    y += 18;
+                    Batch.Text(SpriteBatch.FontStyle.Mono, 16, "Fixed updates since start: " + TotalFixedUpdates, new Vector2(10, y), Color.Aquamarine);
+                    y += 24;
+                    
+                    Batch.Text(SpriteBatch.FontStyle.Mono, 16, "Memory used: " + GC.GetTotalMemory(false) / 1024 / 1024 + " MB", new Vector2(10, y), Color.Aquamarine);
+                    y += 24;
+                }
+                
+                if(Stats.HasFlag(DebugStats.SpriteBatch))
+                {                    
+                    Batch.Text(SpriteBatch.FontStyle.Mono, 16, "Drawn textures: " + Batch.Stats.DrawnTextures, new Vector2(10, y), Color.CadetBlue);
+                    y += 18;
+                    Batch.Text(SpriteBatch.FontStyle.Mono, 16, "Start() count: " + Batch.Stats.BatchStarts, new Vector2(10, y), Color.CadetBlue);
+                    y += 18;
+                    Batch.Text(SpriteBatch.FontStyle.Mono, 16, "End() count: " + Batch.Stats.BatchEnds, new Vector2(10, y), Color.CadetBlue);
+                }
+            }
             
-            if(DrawFPS)
-                Batch.Text(SpriteBatch.FontStyle.Normal, 24, "FPS: " + FPS, new Vector2(10, 10), Color.GreenYellow);
+            Batch.Stats.Reset();
 
             base.Draw(gameTime);
         }

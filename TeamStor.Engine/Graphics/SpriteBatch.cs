@@ -43,15 +43,19 @@ namespace TeamStor.Engine.Graphics
             {
                 if(value != _sortMode)
                 {
-                    if(ItemsQueued)
-                        ResetSpriteBatch();
+                    bool itemsQueued = ItemsQueued;
+                    if(itemsQueued)
+                        End();
                     
                     _sortMode = value;
+                    
+                    if(itemsQueued)
+                        ResetSpriteBatch();
                 }
             }
         }
         
-        private BlendState _blendState = BlendState.NonPremultiplied;
+        private BlendState _blendState = BlendState.AlphaBlend;
         
         /// <summary>
         /// MonoGame batch blend state.
@@ -63,10 +67,14 @@ namespace TeamStor.Engine.Graphics
             {
                 if(value != _blendState)
                 {
-                    if(ItemsQueued)
-                        ResetSpriteBatch();
+                    bool itemsQueued = ItemsQueued;
+                    if(itemsQueued)
+                        End();
                     
                     _blendState = value;
+                    
+                    if(itemsQueued)
+                        ResetSpriteBatch();
                 }
             }
         }
@@ -83,10 +91,14 @@ namespace TeamStor.Engine.Graphics
             {
                 if(value != _samplerState)
                 {            
-                    if(ItemsQueued)
-                        ResetSpriteBatch();
+                    bool itemsQueued = ItemsQueued;
+                    if(itemsQueued)
+                        End();
                     
                     _samplerState = value;
+                    
+                    if(itemsQueued)
+                        ResetSpriteBatch();
                 }
             }
         }
@@ -104,10 +116,14 @@ namespace TeamStor.Engine.Graphics
             {
                 if(value != _effect)
                 {
-                    if(ItemsQueued)
-                        ResetSpriteBatch();
+                    bool itemsQueued = ItemsQueued;
+                    if(itemsQueued)
+                        End();
                     
                     _effect = value;
+                    
+                    if(itemsQueued)
+                        ResetSpriteBatch();
                 }
             }
         }
@@ -124,10 +140,14 @@ namespace TeamStor.Engine.Graphics
             {
                 if(value != _transform)
                 {
-                    if(ItemsQueued)
-                        ResetSpriteBatch();
+                    bool itemsQueued = ItemsQueued;
+                    if(itemsQueued)
+                        End();
                     
                     _transform = value;
+                    
+                    if(itemsQueued)
+                        ResetSpriteBatch();
                 }
             }
         }
@@ -144,14 +164,17 @@ namespace TeamStor.Engine.Graphics
             {
                 if(value != _scissor)
                 {
-                    if(ItemsQueued)
-                        ResetSpriteBatch();
-
+                    bool itemsQueued = ItemsQueued;
+                    if(itemsQueued)
+                        End();
+                    
                     _rastState = new RasterizerState();
-                    _rastState.CullMode = CullMode.CullClockwiseFace;
                     _rastState.ScissorTestEnable = _scissor.HasValue;
 
-                    _scissor = value;
+                    _scissor = value;   
+                    
+                    if(itemsQueued)
+                        ResetSpriteBatch();
                 }
             }
         }
@@ -168,15 +191,53 @@ namespace TeamStor.Engine.Graphics
             {
                 if(value != _renderTarget)
                 {
-                    if(ItemsQueued)
-                        ResetSpriteBatch();
+                    bool itemsQueued = ItemsQueued;
+                    if(itemsQueued)
+                        End();
                     
                     _renderTarget = value;
+                    
+                    if(itemsQueued)
+                        ResetSpriteBatch();
                 }
             }
         }
 
         private RasterizerState _rastState = new RasterizerState();
+
+        /// <summary>
+        /// Sprite batch stats.
+        /// </summary>
+        public class BatchStats
+        {
+            /// <summary>
+            /// Amount of drawn textures.
+            /// </summary>
+            public int DrawnTextures;
+            
+            /// <summary>
+            /// Amount of times Start() was called on the MonoGame sprite batch.
+            /// </summary>
+            public int BatchStarts;
+            
+            /// <summary>
+            /// Amount of times End() was called on the MonoGame sprite batch.
+            /// </summary>
+            public int BatchEnds;
+
+            public void Reset()
+            {
+                DrawnTextures = BatchStarts = BatchEnds = 0;
+            }
+        }
+
+        /// <summary>
+        /// Stats for this sprite batch.
+        /// </summary>
+        public BatchStats Stats
+        {
+            get;
+        } = new BatchStats();
 
         public SpriteBatch(Game game)
         {
@@ -187,7 +248,6 @@ namespace TeamStor.Engine.Graphics
             _emptyTexture = new Texture2D(game.GraphicsDevice, 1, 1);
             _emptyTexture.SetData(new Color[] { Color.White });
 
-            _rastState.CullMode = CullMode.CullClockwiseFace;
             _rastState.ScissorTestEnable = false;
         }
 
@@ -195,6 +255,8 @@ namespace TeamStor.Engine.Graphics
         {
             if(ItemsQueued)
                 End();
+
+            Stats.BatchStarts++;
             _monoGameSpriteBatch.Begin(SortMode, BlendState, SamplerState, DepthStencilState.Default, _rastState, Effect, Transform);
             ItemsQueued = true;
         }
@@ -214,8 +276,9 @@ namespace TeamStor.Engine.Graphics
         {
             if(!ItemsQueued)
                 ResetSpriteBatch();
-            
-            _monoGameSpriteBatch.Draw(texture, pos, crop, color, rotation, rotationOrigin.HasValue ? rotationOrigin.Value : Vector2.Zero, scale.HasValue ? scale.Value : Vector2.One, effect, 0f);
+
+            Stats.DrawnTextures++;
+            _monoGameSpriteBatch.Draw(texture, new Vector2((int)pos.X, (int)pos.Y), crop, color, rotation, rotationOrigin.HasValue ? rotationOrigin.Value : Vector2.Zero, scale.HasValue ? scale.Value : Vector2.One, effect, 0f);
         }
         
         /// <summary>
@@ -232,7 +295,8 @@ namespace TeamStor.Engine.Graphics
         {
             if(!ItemsQueued)
                 ResetSpriteBatch();
-            
+
+            Stats.DrawnTextures++;
             _monoGameSpriteBatch.Draw(texture, rectangle, crop, color, rotation, rotationOrigin.HasValue ? rotationOrigin.Value : Vector2.Zero, effect, 0f);
         }
 
@@ -243,7 +307,7 @@ namespace TeamStor.Engine.Graphics
         /// <param name="color">The color to draw the rectangle with.</param>
         /// <param name="rotation">The rotation to rotate the rectangle by.</param>
         /// <param name="rotationOrigin">The origin of the rotation inside the rectangle (0-1)</param>
-        public void Rectangle(Rectangle rectangle, Color color = default(Color), float rotation = 0f, Vector2? rotationOrigin = null)
+        public void Rectangle(Rectangle rectangle, Color color, float rotation = 0f, Vector2? rotationOrigin = null)
         {
             Texture(rectangle, _emptyTexture, color, null, rotation, rotationOrigin);
         }
@@ -254,7 +318,7 @@ namespace TeamStor.Engine.Graphics
         /// <param name="pos">The position to draw the point at.</param>
         /// <param name="color">The color to draw the point with.</param>
         /// <param name="size">The size of the point.</param>
-        public void Point(Vector2 pos, Color color = default(Color), int size = 1)
+        public void Point(Vector2 pos, Color color, int size = 1)
         {
             Rectangle(new Rectangle((int)pos.X - (int)Math.Floor(size / 2f), (int)pos.Y - (int)Math.Floor(size / 2f), size, size), color);
         }
@@ -266,7 +330,7 @@ namespace TeamStor.Engine.Graphics
         /// <param name="end">The end of the line.</param>
         /// <param name="color">The color to draw the line with.</param>
         /// <param name="thickness">The thickness of the line.</param>
-        public void Line(Vector2 start, Vector2 end, Color color = default(Color), int thickness = 1)
+        public void Line(Vector2 start, Vector2 end, Color color, int thickness = 1)
         {
             // https://gamedev.stackexchange.com/questions/44015/how-can-i-draw-a-simple-2d-line-in-xna-without-using-3d-primitives-and-shders
             Vector2 edge = end - start;
@@ -279,7 +343,7 @@ namespace TeamStor.Engine.Graphics
         /// <param name="rectangle">The rectangle to draw an outline around.</param>
         /// <param name="color">The color to draw the outline with.</param>
         /// <param name="thickness">The thickness of the outline.</param>
-        public void Outline(Rectangle rectangle, Color color = default(Color), int thickness = 1)
+        public void Outline(Rectangle rectangle, Color color, int thickness = 1)
         {
             // -----
             // #   #
@@ -313,7 +377,7 @@ namespace TeamStor.Engine.Graphics
         /// <param name="size">The size of the circle.</param>
         /// <param name="color">The color of the circle.</param>
         /// <param name="thickness">The thickness of the circle.</param>
-        public void Circle(Vector2 center, float size, Color color = default(Color), int thickness = 1)
+        public void Circle(Vector2 center, float size, Color color, int thickness = 1)
         {
             for(float i = -1f; i <= 0.9f; i += 0.1f)
             {
@@ -334,7 +398,7 @@ namespace TeamStor.Engine.Graphics
         /// <param name="color">The color to draw the text with.</param>
         /// <param name="lineMult">The line height multiplier.</param>
         /// <param name="spacing">The spacing multiplier.</param>
-        public void Text(Font font, uint size, string text, Vector2 pos, Color color = default(Color), float lineMult = 1f, float spacing = 1f)
+        public void Text(Font font, uint size, string text, Vector2 pos, Color color, float lineMult = 1f, float spacing = 1f)
         {
             font.Draw(this, size, text, pos, color, lineMult, spacing);
         }
@@ -355,14 +419,14 @@ namespace TeamStor.Engine.Graphics
         /// <summary>
         /// Draws text with the specified font style.
         /// </summary>
-        /// <param name="font">The font to use.</param>
+        /// <param name="fontStyle">The font style to use.</param>
         /// <param name="size">The font size.</param>
         /// <param name="text">The text to draw.</param>
         /// <param name="pos">The position to draw the text at.</param>
         /// <param name="color">The color to draw the text with.</param>
         /// <param name="lineMult">The line height multiplier.</param>
         /// <param name="spacing">The spacing multiplier.</param>
-        public void Text(FontStyle fontStyle, uint size, string text, Vector2 pos, Color color = default(Color), float lineMult = 1f, float spacing = 1f)
+        public void Text(FontStyle fontStyle, uint size, string text, Vector2 pos, Color color, float lineMult = 1f, float spacing = 1f)
         {
             Font font = _game.DefaultFonts.Normal;
 
@@ -403,7 +467,10 @@ namespace TeamStor.Engine.Graphics
                     _game.GraphicsDevice.ScissorRectangle = Scissor.Value;
                 if(RenderTarget != null)
                     _game.GraphicsDevice.SetRenderTarget(RenderTarget);
+
+                Stats.BatchEnds++;
                 _monoGameSpriteBatch.End();
+                
                 if(RenderTarget != null)
                     _game.GraphicsDevice.SetRenderTarget(null);
                 if(Scissor.HasValue)
@@ -419,18 +486,17 @@ namespace TeamStor.Engine.Graphics
         public void Reset()
         {
             _sortMode = SpriteSortMode.Deferred;
-            _blendState = BlendState.NonPremultiplied;
+            _blendState = BlendState.AlphaBlend;
             _samplerState = SamplerState.AnisotropicWrap;
             _effect = null;
             _transform = Matrix.Identity;
             _scissor = null;
             _renderTarget = null;
             _rastState = new RasterizerState();
-            _rastState.CullMode = CullMode.CullClockwiseFace;
             _rastState.ScissorTestEnable = false;
             
             if(ItemsQueued)
-                ResetSpriteBatch();
+                End();
         }
     }
 }

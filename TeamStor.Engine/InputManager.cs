@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
 namespace TeamStor.Engine
@@ -95,7 +96,7 @@ namespace TeamStor.Engine
 			
 			_currentState = new InputState();
 			_currentState.Mouse = Microsoft.Xna.Framework.Input.Mouse.GetState();
-			_currentState.Keyboard = Microsoft.Xna.Framework.Input.Keyboard.GetState();
+			_currentState.Keyboard = Keyboard.GetState();
 		}
 		
 		private void OnFixedUpdateBeforeState(object sender, Game.FixedUpdateEventArgs e)
@@ -106,7 +107,7 @@ namespace TeamStor.Engine
 
 			_fixedUpdateCurrentState = new InputState();
 			_fixedUpdateCurrentState.Mouse = Microsoft.Xna.Framework.Input.Mouse.GetState();
-			_fixedUpdateCurrentState.Keyboard = Microsoft.Xna.Framework.Input.Keyboard.GetState();
+			_fixedUpdateCurrentState.Keyboard = Keyboard.GetState();
 		}
 		
 		private void OnFixedUpdateAfterState(object sender, Game.FixedUpdateEventArgs e)

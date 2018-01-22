@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -165,25 +166,21 @@ namespace TeamStor.Engine.Graphics
 			return CharacterMap.Contains(c);
 		}
 		
-		private void RenderIntoImage(Texture2D image, FTBitmap bitmap, Vector2 pos)
-		{
-			Color[] data = new Color[image.Width * image.Height];
-			image.GetData(data);
-			
+		private void RenderIntoColorData(Color[] data, FTBitmap bitmap, Vector2 pos)
+		{			
 			unsafe
 			{
 				byte* colors = (byte*)bitmap.Buffer;
 				
-				for(int y = 0; y < Math.Min(bitmap.Rows, image.Height); y++)
+				for(int y = 0; y < Math.Min(bitmap.Rows, TEXTURE_SIZE); y++)
 				{
-					for(int x = 0; x < Math.Min(bitmap.Width, image.Width); x++)
+					for(int x = 0; x < Math.Min(bitmap.Width, TEXTURE_SIZE); x++)
 					{
-						data[(int)(((y + pos.Y) * image.Width) + (x + pos.X))] = Color.White * (colors[(y * bitmap.Pitch) + x] / 255f);
+						data[(int)(((y + pos.Y) * TEXTURE_SIZE) + (x + pos.X))] = 
+							Color.White * (colors[(y * bitmap.Pitch) + x] / 255f);
 					}
 				}
 			}
-			
-			image.SetData(data);
 		}
 
 		/// <summary>
@@ -201,8 +198,10 @@ namespace TeamStor.Engine.Graphics
 			LoadedSize loadedSize = new LoadedSize();
 			loadedSize.LineHeight = (int)size;
 			loadedSize.Textures = new List<Texture2D>();
-			
+						
 			loadedSize.Textures.Add(new Texture2D(_device, TEXTURE_SIZE, TEXTURE_SIZE));
+			
+			Color[] data = new Color[TEXTURE_SIZE * TEXTURE_SIZE];
 
 			int x = 0, y = 0;
 			
@@ -214,7 +213,7 @@ namespace TeamStor.Engine.Graphics
 
 				uint index = _face.GetCharIndex(c);
 				
-				_face.LoadGlyph(index, LoadFlags.NoHinting, LoadTarget.Normal);
+				_face.LoadGlyph(index, LoadFlags.Color | LoadFlags.NoHinting | LoadFlags.NoAutohint, LoadTarget.Normal);
 				_face.Glyph.RenderGlyph(RenderMode.Normal);
 				
 				glyph.CropInTexture = new Rectangle(x, y, _face.Glyph.Bitmap.Width, _face.Glyph.Bitmap.Rows);
@@ -227,6 +226,7 @@ namespace TeamStor.Engine.Graphics
 
 					if(y + glyph.CropInTexture.Height >= TEXTURE_SIZE)
 					{
+						loadedSize.Textures.Last().SetData(data);
 						loadedSize.Textures.Add(new Texture2D(_device, TEXTURE_SIZE, TEXTURE_SIZE));
 						x = y = 0;
 					}
@@ -254,11 +254,12 @@ namespace TeamStor.Engine.Graphics
 					}
 				}
 
-				RenderIntoImage(loadedSize.Textures.Last(), _face.Glyph.Bitmap,
+				RenderIntoColorData(data, _face.Glyph.Bitmap,
 					new Vector2(glyph.CropInTexture.Left, glyph.CropInTexture.Top));
 				loadedSize.Glyphs.Add(c, glyph);
 			}
 			
+			loadedSize.Textures.Last().SetData(data);
 			_loadedSizes.Add(size, loadedSize);
 			return true;
 		}
@@ -338,7 +339,7 @@ namespace TeamStor.Engine.Graphics
 		/// <param name="color">The color to use when drawing the text.</param>
 		/// <param name="lineMult">The mulitplier to use for line height.</param>
 		/// <param name="spacing">The multiplier for the space between each letter.</param>
-		public void Draw(SpriteBatch batch, uint size, string text, Vector2 pos, Color color = default(Color), float lineMult = 1f, float spacing = 1f)
+		public void Draw(SpriteBatch batch, uint size, string text, Vector2 pos, Color color, float lineMult = 1f, float spacing = 1f)
 		{
 			if(batch.Device != _device)
 				return;
