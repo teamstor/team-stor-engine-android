@@ -369,7 +369,7 @@ namespace TeamStor.Engine.Graphics
                     break;
                     
                 case FontStyle.Italic:
-                    font = _game.DefaultFonts.ItalicNormal;
+                    font = _game.DefaultFonts.Italic;
                     break;
                     
                 case FontStyle.ItalicBold:

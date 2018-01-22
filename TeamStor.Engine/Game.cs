@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using TeamStor.Engine.Graphics;
 using SpriteBatch = TeamStor.Engine.Graphics.SpriteBatch;
 
@@ -20,6 +21,9 @@ namespace TeamStor.Engine
 
         private double _lastUpdateTime;
         private double _accumTime;
+
+        private long _framesSinceLastFpsReset;
+        private double _accumTimeSinceLastFpsReset;
         
         private GraphicsDeviceManager _graphicsDeviceManager;
 
@@ -56,6 +60,25 @@ namespace TeamStor.Engine
         /// The total amount of fixed updates that occured since the game started.
         /// </summary>
         public long TotalFixedUpdates
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// Frames per second.
+        /// </summary>
+        public long FPS
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// If FPS should be drawn on screen.
+        /// Toggle with F5.
+        /// </summary>
+        public bool DrawFPS
         {
             get;
             private set;
@@ -135,7 +158,7 @@ namespace TeamStor.Engine
             /// <summary>
             /// FreeSans italic
             /// </summary>
-            public Font ItalicNormal;
+            public Font Italic;
             
             /// <summary>
             /// FreeSans bold italic
@@ -319,7 +342,7 @@ namespace TeamStor.Engine
             
             DefaultFonts.Normal = new Font(GraphicsDevice, Assets.Directory + "/engine/FreeSans.ttf");
             DefaultFonts.Bold = new Font(GraphicsDevice, Assets.Directory + "/engine/FreeSansBold.ttf");
-            DefaultFonts.ItalicNormal = new Font(GraphicsDevice, Assets.Directory + "/engine/FreeSansOblique.ttf");
+            DefaultFonts.Italic = new Font(GraphicsDevice, Assets.Directory + "/engine/FreeSansOblique.ttf");
             DefaultFonts.ItalicBold = new Font(GraphicsDevice, Assets.Directory + "/engine/FreeSansBoldOblique.ttf");
             DefaultFonts.Mono = new Font(GraphicsDevice, Assets.Directory + "/engine/VeraMono.ttf");
             DefaultFonts.MonoBold = new Font(GraphicsDevice, Assets.Directory + "/engine/VeraMoBd.ttf");
@@ -333,7 +356,7 @@ namespace TeamStor.Engine
             
             DefaultFonts.Normal.Dispose();
             DefaultFonts.Bold.Dispose();
-            DefaultFonts.ItalicNormal.Dispose();
+            DefaultFonts.Italic.Dispose();
             DefaultFonts.ItalicBold.Dispose();
             DefaultFonts.Mono.Dispose();
             DefaultFonts.MonoBold.Dispose();
@@ -357,8 +380,24 @@ namespace TeamStor.Engine
                 if(OnUpdateAfterState != null)
                     OnUpdateAfterState(this, new UpdateEventArgs(DeltaTime, Time, TotalUpdates));
             }
+            
+            if(Input.KeyPressed(Keys.F4))
+                Fullscreen = !Fullscreen;
+
+            if(Input.KeyPressed(Keys.F5))
+                DrawFPS = !DrawFPS;
 
             _accumTime += DeltaTime;
+            _framesSinceLastFpsReset++;
+            _accumTimeSinceLastFpsReset += DeltaTime;
+
+            if(_accumTimeSinceLastFpsReset >= 1.0)
+            {
+                FPS = _framesSinceLastFpsReset;
+                _framesSinceLastFpsReset = 0;
+                _accumTimeSinceLastFpsReset -= 1.0;
+            }
+            
             while(_accumTime >= (1.0 / FixedUpdatesPerSecond))
             {
                 if(CurrentState != null)
@@ -383,12 +422,29 @@ namespace TeamStor.Engine
 
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.RoyalBlue);
-            Batch.Reset();
+            GraphicsDevice.Clear(new Color(0.1f, 0.1f, 0.1f));
             
+            Vector2 viewport = new Vector2(GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height);
             if(CurrentState != null)
-                CurrentState.Draw(Batch, new Vector2(GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height));
+                CurrentState.Draw(Batch, viewport);
             
+            Batch.Reset();
+
+            if(CurrentState == null)
+            {
+                Vector2 measure = DefaultFonts.Italic.Measure(32, "No GameState set (fixa snälla)");
+                
+                Batch.Text(
+                    SpriteBatch.FontStyle.Italic, 
+                    32, 
+                    "No GameState set (fixa snälla)", 
+                    new Vector2(viewport.X / 2 - measure.X / 2, viewport.Y / 2 - measure.Y / 2),
+                    new Color(0.9f, 0.9f, 0.9f));
+            }
+            
+            if(DrawFPS)
+                Batch.Text(SpriteBatch.FontStyle.Normal, 24, "FPS: " + FPS, new Vector2(10, 10), Color.GreenYellow);
+
             base.Draw(gameTime);
         }
     }
