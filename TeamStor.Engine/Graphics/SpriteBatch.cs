@@ -321,6 +321,21 @@ namespace TeamStor.Engine.Graphics
         }
 
         /// <summary>
+        /// Draws text with the specified font.
+        /// </summary>
+        /// <param name="font">The font to use.</param>
+        /// <param name="size">The font size.</param>
+        /// <param name="text">The text to draw.</param>
+        /// <param name="pos">The position to draw the text at.</param>
+        /// <param name="color">The color to draw the text with.</param>
+        /// <param name="lineMult">The line height multiplier.</param>
+        /// <param name="spacing">The spacing multiplier.</param>
+        public void Text(Font font, uint size, string text, Vector2 pos, Color color = default(Color), float lineMult = 1f, float spacing = 1f)
+        {
+            font.Draw(this, size, text, pos, color, lineMult, spacing);
+        }
+
+        /// <summary>
         /// Draws all queued items.
         /// </summary>
         public void End()
