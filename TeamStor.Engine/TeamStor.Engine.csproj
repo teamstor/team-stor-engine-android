@@ -61,13 +61,13 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
-    <EngineFiles Include="$(SolutionDir)\..\Dependencies\data\engine\**\*.*" />
+    <EngineFiles Include="$(ProjectDir)\..\Dependencies\data\engine\**\*.*" />
   </ItemGroup>
   <Target Name="AfterBuild">
-    <Copy SourceFiles="$(SolutionDir)\..\Dependencies\freetype6.dll" DestinationFolder="$(OutDir)" />
-    <Copy SourceFiles="$(SolutionDir)\..\Dependencies\SDL2.dll" DestinationFolder="$(OutDir)" />
-    <Copy SourceFiles="$(SolutionDir)\..\Dependencies\SharpFont.dll.config" DestinationFolder="$(OutDir)" />
-    <Copy SourceFiles="$(SolutionDir)\..\Dependencies\soft_oal.dll" DestinationFolder="$(OutDir)" />
+    <Copy SourceFiles="$(ProjectDir)\..\Dependencies\freetype6.dll" DestinationFolder="$(OutDir)" />
+    <Copy SourceFiles="$(ProjectDir)\..\Dependencies\SDL2.dll" DestinationFolder="$(OutDir)" />
+    <Copy SourceFiles="$(ProjectDir)\..\Dependencies\SharpFont.dll.config" DestinationFolder="$(OutDir)" />
+    <Copy SourceFiles="$(ProjectDir)\..\Dependencies\soft_oal.dll" DestinationFolder="$(OutDir)" />
     <MakeDir Directories="$(OutDir)\data" />
     <MakeDir Directories="$(OutDir)\data\fonts" />
     <Copy SourceFiles="@(EngineFiles)" DestinationFolder="$(OutDir)\data\engine" />
