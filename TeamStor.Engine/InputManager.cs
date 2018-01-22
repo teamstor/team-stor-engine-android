@@ -17,15 +17,21 @@ namespace TeamStor.Engine
 	{
 		private class InputState
 		{
+			public InputState()
+			{
+				Mouse = new MouseState();
+				Keyboard = new KeyboardState();
+			}
+			
 			public MouseState Mouse;
 			public KeyboardState Keyboard;
 		}
 
-		private InputState _lastState;
-		private InputState _currentState;
+		private InputState _lastState = new InputState();
+		private InputState _currentState = new InputState();
 		
-		private InputState _fixedUpdateLastState;
-		private InputState _fixedUpdateCurrentState;
+		private InputState _fixedUpdateLastState = new InputState();
+		private InputState _fixedUpdateCurrentState = new InputState();
 		
 		/// <summary>
 		/// If the input manager is in fixed update mode (during FixedUpdate()).
