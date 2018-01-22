@@ -329,6 +329,7 @@ namespace TeamStor.Engine
 
             IsFixedTimeStep = false;
             Window.AllowUserResizing = true;
+            IsMouseVisible = true;
             
             _graphicsDeviceManager = new GraphicsDeviceManager(this);
             _graphicsDeviceManager.PreparingDeviceSettings += OnPreparingDeviceSettings;
@@ -340,7 +341,7 @@ namespace TeamStor.Engine
             e.GraphicsDeviceInformation.PresentationParameters.IsFullScreen = false;
             e.GraphicsDeviceInformation.PresentationParameters.BackBufferWidth = 960;
             e.GraphicsDeviceInformation.PresentationParameters.BackBufferHeight = 540;
-            e.GraphicsDeviceInformation.PresentationParameters.PresentationInterval = PresentInterval.Immediate;
+            e.GraphicsDeviceInformation.PresentationParameters.PresentationInterval = PresentInterval.One;
         }
 
         protected override void LoadContent()
