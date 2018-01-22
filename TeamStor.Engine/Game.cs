@@ -4,7 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using TeamStor.Engine.Graphics;
+using SpriteBatch = TeamStor.Engine.Graphics.SpriteBatch;
 
 namespace TeamStor.Engine
 {
@@ -18,6 +20,8 @@ namespace TeamStor.Engine
 
         private double _lastUpdateTime;
         private double _accumTime;
+        
+        private GraphicsDeviceManager _graphicsDeviceManager;
 
         /// <summary>
         /// The amount of time passed since the game started.
@@ -78,17 +82,17 @@ namespace TeamStor.Engine
             set
             {
                 if(_state != null)
-                {
                     _state.OnLeave(value);
-                    Assets.OnStateChange();
-                }
+                
+                if(OnStateChange != null)
+                    OnStateChange(this, new ChangeStateEventArgs(_state, value));
 
                 if(value != null)
                 {
                     value.Game = this;
                     value.OnEnter(_state);
                 }
-
+                
                 _state = value;
             }
         }
@@ -107,7 +111,16 @@ namespace TeamStor.Engine
             private set;
         }
 
-        public struct DefaultFontsStruct
+        /// <summary>
+        /// The input manager.
+        /// </summary>
+        public InputManager Input
+        {
+            get;
+            private set;
+        }
+
+        public class DefaultFontsCollection
         {
             /// <summary>
             /// FreeSans
@@ -143,7 +156,90 @@ namespace TeamStor.Engine
         /// <summary>
         /// Default fonts used by the engine.
         /// </summary>
-        public DefaultFontsStruct DefaultFonts;
+        public DefaultFontsCollection DefaultFonts;
+
+        public class UpdateEventArgs : EventArgs
+        {
+            public UpdateArgs(double deltaTime, double totalTime, long count)
+            {
+                DeltaTime = deltaTime;
+                TotalTime = totalTime;
+                Count = count;
+            }
+            
+            /// <summary>
+            /// The amount of time since the last frame, in seconds.
+            /// </summary>
+            public double DeltaTime;
+            
+            /// <summary>
+            /// The total amount of time (in seconds) since the game started.
+            /// </summary>
+            public double TotalTime;
+            
+            /// <summary>
+            /// The total amount of updates since the game started.
+            /// </summary>
+            public long Count;
+        }
+
+        /// <summary>
+        /// Called once every frame, before state update.
+        /// </summary>
+        public event EventHandler<UpdateEventArgs> OnUpdateBeforeState;
+        
+        /// <summary>
+        /// Called once every frame, after state update.
+        /// </summary>
+        public event EventHandler<UpdateEventArgs> OnUpdateAfterState;
+        
+        public class FixedUpdateEventArgs : EventArgs
+        {
+            public FixedUpdateEventArgs(long count)
+            {
+                Count = count;
+            }
+            
+            /// <summary>
+            /// The total amount of fixed updates since the game started.
+            /// </summary>
+            public long Count;
+        }
+
+        /// <summary>
+        /// Called 60 (change with <code>FixedUpdatesPerSecond</code>) times a second, before state update.
+        /// </summary>
+        public event EventHandler<FixedUpdateEventArgs> OnFixedUpdateBeforeState;
+        
+        /// <summary>
+        /// Called 60 (change with <code>FixedUpdatesPerSecond</code>) times a second, after state update.
+        /// </summary>
+        public event EventHandler<FixedUpdateEventArgs> OnFixedUpdateAfterState;
+        
+        public class ChangeStateEventArgs : EventArgs
+        {
+            public ChangeStateEventArgs(GameState from, GameState to)
+            {
+                From = from;
+                To = to;
+            }
+
+            /// <summary>
+            /// The previous state, can be null.
+            /// </summary>
+            public GameState From;
+            
+            /// <summary>
+            /// The next state, can be null.
+            /// </summary>
+            public GameState To;
+        }
+        
+        /// <summary>
+        /// Called when the game state changes.
+        /// </summary>
+        public event EventHandler<ChangeStateEventArgs> OnStateChange;
+
         
         /// <param name="initialState">The state to start the game on.</param>
         /// <param name="assetsDir">The assets directory.</param>
@@ -151,15 +247,30 @@ namespace TeamStor.Engine
         public Game(GameState initialState, string assetsDir = "data", bool showTeamStorLogo = true)
         {
             Assets = new AssetsManager(this, assetsDir);
+            Input = new InputManager(this);
             
             if(showTeamStorLogo)
                 _initialState = new Internal.TeamStorLogoState(initialState);
             else
                 _initialState = initialState;
+
+            IsFixedTimeStep = false;
+            Window.AllowUserResizing = true;
+            
+            _graphicsDeviceManager = new GraphicsDeviceManager(this);
+            _graphicsDeviceManager.PreparingDeviceSettings += OnPreparingDeviceSettings;
+            _graphicsDeviceManager.HardwareModeSwitch = false;
+        }
+
+        private void OnPreparingDeviceSettings(object sender, PreparingDeviceSettingsEventArgs e)
+        {
+            e.GraphicsDeviceInformation.PresentationParameters.BackBufferWidth = 960;
+            e.GraphicsDeviceInformation.PresentationParameters.BackBufferHeight = 540;
+            e.GraphicsDeviceInformation.PresentationParameters.PresentationInterval = PresentInterval.Immediate;
         }
 
         protected override void LoadContent()
-        {
+        {            
             Batch = new SpriteBatch(this);
             
             DefaultFonts.Normal = new Font(GraphicsDevice, Assets.Directory + "/engine/FreeSans.ttf");
@@ -193,8 +304,14 @@ namespace TeamStor.Engine
 
             if(CurrentState != null)
             {
+                if(OnUpdateBeforeState != null)
+                    OnUpdateBeforeState(this, new UpdateEventArgs(DeltaTime, Time, TotalUpdates));
+                
                 CurrentState.Update(DeltaTime, Time, TotalUpdates);
                 TotalUpdates++;
+                
+                if(OnUpdateAfterState != null)
+                    OnUpdateAfterState(this, new UpdateEventArgs(DeltaTime, Time, TotalUpdates));
             }
 
             _accumTime += DeltaTime;
@@ -202,22 +319,33 @@ namespace TeamStor.Engine
             {
                 if(CurrentState != null)
                 {
+                    if(OnFixedUpdateBeforeState != null)
+                        OnFixedUpdateBeforeState(this, new FixedUpdateEventArgs(TotalFixedUpdates));
+
                     CurrentState.FixedUpdate(TotalFixedUpdates);
                     TotalFixedUpdates++;
+                    
+                    if(OnFixedUpdateAfterState != null)
+                        OnFixedUpdateAfterState(this, new FixedUpdateEventArgs(TotalFixedUpdates));
                 }
 
                 _accumTime -= (1.0 / FixedUpdatesPerSecond);
             }
 
             _lastUpdateTime = Time;
+            
+            base.Update(gameTime);
         }
 
         protected override void Draw(GameTime gameTime)
         {
+            GraphicsDevice.Clear(Color.RoyalBlue);
             Batch.Reset();
             
             if(CurrentState != null)
                 CurrentState.Draw(Batch, new Vector2(GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height));
+            
+            base.Draw(gameTime);
         }
     }
 }

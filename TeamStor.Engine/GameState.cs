@@ -27,6 +27,14 @@ namespace TeamStor.Engine
         }
 
         /// <summary>
+        /// Game input manager.
+        /// </summary>
+        public InputManager Input
+        {
+            get { return Game.Input; }
+        }
+
+        /// <summary>
         /// Called when the state is entered.
         /// </summary>
         /// <param name="previousState">The previous state, can be null</param>

@@ -51,6 +51,8 @@ namespace TeamStor.Engine
 		{
 			Game = game;
 			Directory = dir;
+
+			Game.OnStateChange += OnStateChange;
 		}
 
 		public void Dispose()
@@ -185,25 +187,25 @@ namespace TeamStor.Engine
 		{
 			return _loadedAssets.ContainsKey(name.ToLowerInvariant()) && _loadedAssets[name.ToLowerInvariant()].KeepAfterStateChange;
 		}
-
-		/// <summary>
-		/// Call this to clear up when state changes.
-		/// </summary>
-		public void OnStateChange()
+		
+		private void OnStateChange(object sender, Game.ChangeStateEventArgs e)
 		{
-			List<string> toRemove = new List<string>();
-			
-			foreach(KeyValuePair<string, LoadedAsset> asset in _loadedAssets)
+			if(e.From != e.To)
 			{
-				if(!asset.Value.KeepAfterStateChange)
-				{
-					asset.Value.Asset.Dispose();
-					toRemove.Add(asset.Key);
-				}
-			}
+				List<string> toRemove = new List<string>();
 
-			foreach(string s in toRemove)
-				_loadedAssets.Remove(s);
+				foreach(KeyValuePair<string, LoadedAsset> asset in _loadedAssets)
+				{
+					if(!asset.Value.KeepAfterStateChange)
+					{
+						asset.Value.Asset.Dispose();
+						toRemove.Add(asset.Key);
+					}
+				}
+
+				foreach(string s in toRemove)
+					_loadedAssets.Remove(s);
+			}
 		}
 	}
 }
