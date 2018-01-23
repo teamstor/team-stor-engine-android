@@ -334,7 +334,7 @@ namespace TeamStor.Engine.Graphics
         {
             // https://gamedev.stackexchange.com/questions/44015/how-can-i-draw-a-simple-2d-line-in-xna-without-using-3d-primitives-and-shders
             Vector2 edge = end - start;
-            Rectangle(new Rectangle((int)start.X, (int)start.Y, (int)edge.Length(), thickness), color, (float)Math.Atan2(edge.Y, edge.X), new Vector2(0, 0.5f));
+            Rectangle(new Rectangle((int)start.X, (int)start.Y, (int)edge.Length(), thickness), color, (float)Math.Atan2(edge.Y, edge.X));
         }
         
         /// <summary>
@@ -343,31 +343,32 @@ namespace TeamStor.Engine.Graphics
         /// <param name="rectangle">The rectangle to draw an outline around.</param>
         /// <param name="color">The color to draw the outline with.</param>
         /// <param name="thickness">The thickness of the outline.</param>
-        public void Outline(Rectangle rectangle, Color color, int thickness = 1)
+        /// <param name="inner">If the outline should be inside of the rectangle.</param>
+        public void Outline(Rectangle rectangle, Color color, int thickness = 1, bool inner = true)
         {
             // -----
             // #   #
             // #   #
             // #####
-            Line(new Vector2(rectangle.X, rectangle.Y), new Vector2(rectangle.X + rectangle.Width - thickness, rectangle.Y), color, thickness);
+            Rectangle(new Rectangle(rectangle.X - (inner ? 0 : thickness), rectangle.Y - (inner ? 0 : thickness), rectangle.Width + (inner ? 0 : thickness * 2), thickness), color);
             
             // -----
             // #   #
             // #   #
             // -----
-            Line(new Vector2(rectangle.X, rectangle.Y + rectangle.Height), new Vector2(rectangle.X + rectangle.Width - thickness, rectangle.Y + rectangle.Height), color, thickness);
+            Rectangle(new Rectangle(rectangle.X - (inner ? 0 : thickness), rectangle.Y + rectangle.Height - (inner ? thickness : 0), rectangle.Width + (inner ? 0 : thickness * 2), thickness), color);
             
             // -----
             // -   #
             // -   #
             // -----
-            Line(new Vector2(rectangle.X, rectangle.Y + thickness), new Vector2(rectangle.X, rectangle.Y + rectangle.Height - thickness), color, thickness);
+            Rectangle(new Rectangle(rectangle.X - (inner ? 0 : thickness), rectangle.Y + (inner ? thickness : 0), thickness, rectangle.Height - (inner ? thickness * 2 : 0)), color);
             
             // -----
             // -   -
             // -   -
             // -----
-            Line(new Vector2(rectangle.X + rectangle.Width, rectangle.Y + thickness), new Vector2(rectangle.X + rectangle.Width, rectangle.Y + rectangle.Height - thickness), color, thickness);    
+            Rectangle(new Rectangle(rectangle.X + rectangle.Width - (inner ? thickness : 0), rectangle.Y + (inner ? thickness : 0), thickness, rectangle.Height - (inner ? thickness * 2 : 0)), color);
         }
 
         /// <summary>
@@ -377,12 +378,12 @@ namespace TeamStor.Engine.Graphics
         /// <param name="size">The size of the circle.</param>
         /// <param name="color">The color of the circle.</param>
         /// <param name="thickness">The thickness of the circle.</param>
-        public void Circle(Vector2 center, float size, Color color, int thickness = 1)
+        public void Circle(Vector2 center, float size, Color color, int thickness = 1, float dividePrecision = 40)
         {
-            for(float i = -1f; i <= 0.9f; i += 0.1f)
+            for(float i = -1f; i <= 0.9f; i += 1 / dividePrecision)
             {
-                Vector2 from = new Vector2(center.X + (float)Math.Sin(i) * size, center.Y + (float)Math.Cos(i) * size);
-                Vector2 to = new Vector2(center.X + (float)Math.Sin(i + 0.1f) * size, center.Y + (float)Math.Cos(i + 0.1f) * size);
+                Vector2 from = new Vector2(center.X + (float)Math.Sin(i * MathHelper.TwoPi) * size, center.Y + (float)Math.Cos(i * MathHelper.TwoPi) * size);
+                Vector2 to = new Vector2(center.X + (float)Math.Sin((i + (1 / dividePrecision) + 0.015f) * MathHelper.TwoPi) * size, center.Y + (float)Math.Cos((i + (1 / dividePrecision) + 0.015f) * MathHelper.TwoPi) * size);
                 
                 Line(from, to, color, thickness);
             }
