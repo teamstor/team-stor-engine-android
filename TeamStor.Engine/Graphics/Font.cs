@@ -284,7 +284,7 @@ namespace TeamStor.Engine.Graphics
 			return true;
 		}
 
-		private DrawData[] PositionText(uint size, string text, float lineMult = 1, float spacing = 1)
+		private DrawData[] PositionText(uint size, string text, float lineMult = 1.25f, float spacing = 1)
 		{
 			DrawData[] drawDatas = new DrawData[text.Length];
 
@@ -340,13 +340,16 @@ namespace TeamStor.Engine.Graphics
 		/// <param name="color">The color to use when drawing the text.</param>
 		/// <param name="lineMult">The mulitplier to use for line height.</param>
 		/// <param name="spacing">The multiplier for the space between each letter.</param>
-		public void Draw(SpriteBatch batch, uint size, string text, Vector2 pos, Color color, float lineMult = 1f, float spacing = 1f)
+		public void Draw(SpriteBatch batch, uint size, string text, Vector2 pos, Color color, float lineMult = 1.25f, float spacing = 1f)
 		{
 			if(batch.Device != _device)
 				return;
-			
+
 			foreach(DrawData data in PositionText(size, text, lineMult, spacing))
-				batch.Texture(data.Position + pos, data.Texture, color, null, data.CropInTexture);
+			{
+				if(data.Texture != null)
+					batch.Texture(data.Position + pos, data.Texture, color, null, data.CropInTexture);
+			}
 		}
 		
 		/// <summary>
@@ -356,7 +359,7 @@ namespace TeamStor.Engine.Graphics
 		/// <param name="text">The text to measure.</param>
 		/// <param name="lineMult">The mulitplier to use for line height.</param>
 		/// <param name="spacing">The multiplier for the space between each letter.</param>
-		public Vector2 Measure(uint size, string text, float lineMult = 1f, float spacing = 1f)
+		public Vector2 Measure(uint size, string text, float lineMult = 1.25f, float spacing = 1f)
 		{
 			Vector2 vec = new Vector2(0, 0);
 			

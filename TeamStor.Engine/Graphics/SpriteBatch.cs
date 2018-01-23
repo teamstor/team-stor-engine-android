@@ -399,7 +399,7 @@ namespace TeamStor.Engine.Graphics
         /// <param name="color">The color to draw the text with.</param>
         /// <param name="lineMult">The line height multiplier.</param>
         /// <param name="spacing">The spacing multiplier.</param>
-        public void Text(Font font, uint size, string text, Vector2 pos, Color color, float lineMult = 1f, float spacing = 1f)
+        public void Text(Font font, uint size, string text, Vector2 pos, Color color, float lineMult = 1.25f, float spacing = 1f)
         {
             font.Draw(this, size, text, pos, color, lineMult, spacing);
         }
@@ -427,7 +427,7 @@ namespace TeamStor.Engine.Graphics
         /// <param name="color">The color to draw the text with.</param>
         /// <param name="lineMult">The line height multiplier.</param>
         /// <param name="spacing">The spacing multiplier.</param>
-        public void Text(FontStyle fontStyle, uint size, string text, Vector2 pos, Color color, float lineMult = 1f, float spacing = 1f)
+        public void Text(FontStyle fontStyle, uint size, string text, Vector2 pos, Color color, float lineMult = 1.25f, float spacing = 1f)
         {
             Font font = _game.DefaultFonts.Normal;
 
