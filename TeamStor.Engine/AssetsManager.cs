@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Media;
@@ -151,7 +152,12 @@ namespace TeamStor.Engine
 				
 				if(typeof(T) == typeof(Song))
 				{
-					asset = Song.FromUri(name, new Uri(Directory + "/" + name, UriKind.RelativeOrAbsolute)) as T;
+					// https://stackoverflow.com/questions/5813657/xna-4-song-fromuri-containing-spaces/5829463#5829463
+					ConstructorInfo ctor = typeof(Song).GetConstructor(
+						BindingFlags.NonPublic | BindingFlags.Instance, null,
+						new[] { typeof(string) }, null);
+					asset = ctor.Invoke(new object[] { Directory + "/" + name }) as T;
+					
 					_loadedAssets.Add(name.ToLowerInvariant(), new LoadedAsset(asset, keepAfterStateChange));
 					return true;
 				}
@@ -165,8 +171,9 @@ namespace TeamStor.Engine
 
 				return false;
 			}
-			catch
+			catch(Exception e)
 			{
+				Console.WriteLine(e);
 				return false;
 			}
 		}

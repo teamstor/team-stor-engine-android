@@ -4,7 +4,7 @@
 	{
 		public static void Main(string[] args)
 		{
-			using(Game game = Game.Run(null, "data", false))
+			using(Game game = Game.Run(null, "data"))
 				game.Run();
 		}
 	}
