@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
@@ -29,8 +31,6 @@ namespace TeamStor.Engine
         private double _timeInUpdate;
         private double _timeInFixedUpdate;
         private double _timeInDraw;
-
-        private string _snälla = "snälla";
         
         private GraphicsDeviceManager _graphicsDeviceManager;
 
@@ -154,32 +154,32 @@ namespace TeamStor.Engine
         public class DefaultFontsCollection
         {
             /// <summary>
-            /// Proxima Nova
+            /// Roboto
             /// </summary>
             public Font Normal;
             
             /// <summary>
-            /// Proxima Nova bold
+            /// Roboto Bold
             /// </summary>
             public Font Bold;
             
             /// <summary>
-            /// Proxima Nova italic
+            /// Roboto Italic
             /// </summary>
             public Font Italic;
             
             /// <summary>
-            /// Proxima Nova bold italic
+            /// Roboto Bold Italic
             /// </summary>
             public Font ItalicBold;
             
             /// <summary>
-            /// Inconsolata
+            /// Roboto Mono
             /// </summary>
             public Font Mono;
             
             /// <summary>
-            /// Inconsolata Bold
+            /// Roboto Mono Bold
             /// </summary>
             public Font MonoBold;
         }
@@ -299,25 +299,45 @@ namespace TeamStor.Engine
                 {
                     if(value)
                     {
-                        _graphicsDeviceManager.PreferredBackBufferWidth = GraphicsDevice.Adapter.CurrentDisplayMode.Width;
-                        _graphicsDeviceManager.PreferredBackBufferHeight = GraphicsDevice.Adapter.CurrentDisplayMode.Height;
+                        _graphicsDeviceManager.PreferredBackBufferWidth =
+                            GraphicsDevice.Adapter.CurrentDisplayMode.Width;
+                        _graphicsDeviceManager.PreferredBackBufferHeight =
+                            GraphicsDevice.Adapter.CurrentDisplayMode.Height;
                     }
                     else
                     {
                         _graphicsDeviceManager.PreferredBackBufferWidth = 960;
                         _graphicsDeviceManager.PreferredBackBufferHeight = 540;
                     }
-                    
+
                     _graphicsDeviceManager.IsFullScreen = value;
                     _graphicsDeviceManager.ApplyChanges();
                 }
             }
         }
         
+        [DllImport("Kernel32.dll")]
+        private static extern IntPtr LoadLibrary(string path);
+
+        /// <summary>
+        /// Runs a game with the initial state specified.
+        /// </summary>
         /// <param name="initialState">The state to start the game on.</param>
         /// <param name="assetsDir">The assets directory.</param>
         /// <param name="showTeamStorLogo">If the Team Stor logo should be shown before starting the initial state.</param>
-        public Game(GameState initialState, string assetsDir = "data", bool showTeamStorLogo = true)
+        public static Game Run(GameState initialState, string assetsDir = "data", bool showTeamStorLogo = true)
+        {
+            if(Environment.OSVersion.Platform == PlatformID.Win32NT)
+            {
+                LoadLibrary(AppDomain.CurrentDomain.BaseDirectory + "\\libs\\freetype6.dll");
+                LoadLibrary(AppDomain.CurrentDomain.BaseDirectory + "\\libs\\SDL2.dll");
+                LoadLibrary(AppDomain.CurrentDomain.BaseDirectory + "\\libs\\soft_oal.dll");
+            }
+            
+            return new Game(initialState, assetsDir, showTeamStorLogo);
+        }
+        
+        private Game(GameState initialState, string assetsDir = "data", bool showTeamStorLogo = true)
         {
             Assets = new AssetsManager(this, assetsDir);
             Input = new InputManager(this);
@@ -332,28 +352,23 @@ namespace TeamStor.Engine
             IsMouseVisible = true;
             
             _graphicsDeviceManager = new GraphicsDeviceManager(this);
-            _graphicsDeviceManager.PreparingDeviceSettings += OnPreparingDeviceSettings;
             _graphicsDeviceManager.HardwareModeSwitch = false;
+            _graphicsDeviceManager.SynchronizeWithVerticalRetrace = true;
+            _graphicsDeviceManager.PreferredBackBufferWidth = 960;
+            _graphicsDeviceManager.PreferredBackBufferHeight = 540;
+            _graphicsDeviceManager.IsFullScreen = false;
         }
-
-        private void OnPreparingDeviceSettings(object sender, PreparingDeviceSettingsEventArgs e)
-        {
-            e.GraphicsDeviceInformation.PresentationParameters.IsFullScreen = false;
-            e.GraphicsDeviceInformation.PresentationParameters.BackBufferWidth = 960;
-            e.GraphicsDeviceInformation.PresentationParameters.BackBufferHeight = 540;
-            e.GraphicsDeviceInformation.PresentationParameters.PresentationInterval = PresentInterval.One;
-        }
-
+        
         protected override void LoadContent()
         {            
             Batch = new SpriteBatch(this);
             
-            DefaultFonts.Normal = new Font(GraphicsDevice, Assets.Directory + "/engine/ProximaNova-Regular.otf");
-            DefaultFonts.Bold = new Font(GraphicsDevice, Assets.Directory + "/engine/ProximaNova-Bold.otf");
-            DefaultFonts.Italic = new Font(GraphicsDevice, Assets.Directory + "/engine/ProximaNova-RegularIt.otf");
-            DefaultFonts.ItalicBold = new Font(GraphicsDevice, Assets.Directory + "/engine/ProximaNova-BoldIt.otf");
-            DefaultFonts.Mono = new Font(GraphicsDevice, Assets.Directory + "/engine/Inconsolata-Regular.ttf");
-            DefaultFonts.MonoBold = new Font(GraphicsDevice, Assets.Directory + "/engine/Inconsolata-Bold.ttf");
+            DefaultFonts.Normal = new Font(GraphicsDevice, Assets.Directory + "/engine/Roboto-Regular.ttf");
+            DefaultFonts.Bold = new Font(GraphicsDevice, Assets.Directory + "/engine/Roboto-Bold.ttf");
+            DefaultFonts.Italic = new Font(GraphicsDevice, Assets.Directory + "/engine/Roboto-Italic.ttf");
+            DefaultFonts.ItalicBold = new Font(GraphicsDevice, Assets.Directory + "/engine/Roboto-BoldItalic.ttf");
+            DefaultFonts.Mono = new Font(GraphicsDevice, Assets.Directory + "/engine/RobotoMono-Regular.ttf");
+            DefaultFonts.MonoBold = new Font(GraphicsDevice, Assets.Directory + "/engine/RobotoMono-Bold.ttf");
 
             CurrentState = _initialState;
         }
@@ -417,16 +432,16 @@ namespace TeamStor.Engine
             
             if(Input.KeyPressed(Keys.F4))
                 Fullscreen = !Fullscreen;
+            
+            if(Input.KeyPressed(Keys.F5))
+                VSync = !VSync;
 
             _accumTime += DeltaTime;
             _framesSinceLastFpsReset++;
             _accumTimeSinceLastFpsReset += DeltaTime;
 
             if(_accumTimeSinceLastFpsReset >= 1.0)
-            {
-                if(CurrentState == null)
-                    _snälla = _snälla.Substring(0, _snälla.Length - 1) + "la";
-                
+            {                
                 FPS = _framesSinceLastFpsReset;
                 _framesSinceLastFpsReset = 0;
                 _accumTimeSinceLastFpsReset -= 1.0;
@@ -475,26 +490,26 @@ namespace TeamStor.Engine
             
             watch.Stop();
             _timeInDraw = watch.Elapsed.TotalMilliseconds;
-
+            
             if(CurrentState == null)
             {
-                Vector2 measure = DefaultFonts.Italic.Measure(24, "No GameState set (fixa " + _snälla + ")");
+                Vector2 measure = DefaultFonts.Italic.Measure(Math.Max(1, (uint)(24 * (viewport.X / 960))), "No GameState set (fixa)");
 
                 Batch.Text(
-                    SpriteBatch.FontStyle.Normal, 
-                    24, 
-                    "No GameState set (fixa " + _snälla + ")", 
+                    SpriteBatch.FontStyle.Italic,
+                    Math.Max(1, (uint)(24 * (viewport.X / 960))), 
+                    "No GameState set (fixa)", 
                     new Vector2(viewport.X / 2 - measure.X / 2, viewport.Y / 2 - measure.Y / 2),
                     new Color(0.9f, 0.9f, 0.9f));
             }
-
+            
             if(Stats != 0)
             {
                 int y = 10;
                 
                 if(Stats.HasFlag(DebugStats.FPS))
                 {
-                    Batch.Text(SpriteBatch.FontStyle.Mono, 16, "FPS: " + FPS, new Vector2(10, y), Color.PaleGoldenrod);
+                    Batch.Text(SpriteBatch.FontStyle.Mono, 16, "FPS: " + FPS + (VSync ? " (v-sync)" : ""), new Vector2(10, y), Color.PaleGoldenrod);
                     y += 24;
                 }
                 
@@ -530,10 +545,12 @@ namespace TeamStor.Engine
                     Batch.Text(SpriteBatch.FontStyle.Mono, 16, "Start() count: " + Batch.Stats.BatchStarts, new Vector2(10, y), Color.CadetBlue);
                     y += 18;
                     Batch.Text(SpriteBatch.FontStyle.Mono, 16, "End() count: " + Batch.Stats.BatchEnds, new Vector2(10, y), Color.CadetBlue);
+                    y += 24;
                 }
             }
             
             Batch.Stats.Reset();
+            Batch.Reset();
 
             base.Draw(gameTime);
         }

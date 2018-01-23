@@ -79,7 +79,7 @@ namespace TeamStor.Engine.Graphics
             }
         }
         
-        private SamplerState _samplerState = SamplerState.AnisotropicWrap;
+        private SamplerState _samplerState = SamplerState.AnisotropicClamp;
         
         /// <summary>
         /// MonoGame batch sampler state.
@@ -487,7 +487,7 @@ namespace TeamStor.Engine.Graphics
         {
             _sortMode = SpriteSortMode.Deferred;
             _blendState = BlendState.AlphaBlend;
-            _samplerState = SamplerState.AnisotropicWrap;
+            _samplerState = SamplerState.AnisotropicClamp;
             _effect = null;
             _transform = Matrix.Identity;
             _scissor = null;

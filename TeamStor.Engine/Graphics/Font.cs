@@ -176,8 +176,9 @@ namespace TeamStor.Engine.Graphics
 				{
 					for(int x = 0; x < Math.Min(bitmap.Width, TEXTURE_SIZE); x++)
 					{
-						data[(int)(((y + pos.Y) * TEXTURE_SIZE) + (x + pos.X))] = 
-							Color.White * (colors[(y * bitmap.Pitch) + x] / 255f);
+						if((int)(((y + pos.Y) * TEXTURE_SIZE) + (x + pos.X)) < data.Length)
+							data[(int)(((y + pos.Y) * TEXTURE_SIZE) + (x + pos.X))] = 
+								Color.White * (colors[(y * bitmap.Pitch) + x] / 255f);
 					}
 				}
 			}

@@ -3,7 +3,7 @@
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
     <ProjectGuid>{AC5AE28D-4948-4EB1-9BE8-45B750B52B20}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
@@ -60,16 +60,12 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <ItemGroup>
-    <EngineFiles Include="$(ProjectDir)\..\Dependencies\data\engine\**\*.*" />
-  </ItemGroup>
-  <Target Name="AfterBuild">
-    <Copy SourceFiles="$(ProjectDir)\..\Dependencies\freetype6.dll" DestinationFolder="$(OutDir)" />
-    <Copy SourceFiles="$(ProjectDir)\..\Dependencies\SDL2.dll" DestinationFolder="$(OutDir)" />
-    <Copy SourceFiles="$(ProjectDir)\..\Dependencies\SharpFont.dll.config" DestinationFolder="$(OutDir)" />
-    <Copy SourceFiles="$(ProjectDir)\..\Dependencies\soft_oal.dll" DestinationFolder="$(OutDir)" />
-    <MakeDir Directories="$(OutDir)\data" />
-    <MakeDir Directories="$(OutDir)\data\fonts" />
-    <Copy SourceFiles="@(EngineFiles)" DestinationFolder="$(OutDir)\data\engine" />
-  </Target>
+  <PropertyGroup>
+	  <PostBuildEvent Condition="'$(OS)' == 'Windows_NT' ">
+		XCOPY "$(ProjectDir)..\Dependencies" "$(TargetDir)" /S /Y
+	  </PostBuildEvent>
+	  <PostBuildEvent Condition="'$(OS)' != 'Windows_NT'">
+		cp -rf "$(ProjectDir)../Dependencies/." "$(TargetDir)"
+	  </PostBuildEvent>
+  </PropertyGroup>
 </Project>
