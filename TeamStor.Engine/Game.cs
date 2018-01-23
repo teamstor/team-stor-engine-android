@@ -398,9 +398,12 @@ namespace TeamStor.Engine
             if(OnUpdateBeforeState != null)
                 OnUpdateBeforeState(this, new UpdateEventArgs(DeltaTime, Time, TotalUpdates));
 
-            if(CurrentState != null)        
+            if(CurrentState != null)
+            {
                 CurrentState.Update(DeltaTime, Time, TotalUpdates);
-            
+                CurrentState.Coroutine.Advance();
+            }
+
             TotalUpdates++;
 
             if(OnUpdateAfterState != null)

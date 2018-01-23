@@ -51,6 +51,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssetsManager.cs" />
+    <Compile Include="Coroutine\CoroutineManager.cs" />
+    <Compile Include="Coroutine\ICoroutineOperation.cs" />
+    <Compile Include="Coroutine\Wait.cs" />
     <Compile Include="Game.cs" />
     <Compile Include="GameState.cs" />
     <Compile Include="Graphics\Font.cs" />
@@ -61,10 +64,10 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-	  <PostBuildEvent Condition="'$(OS)' == 'Windows_NT' ">
+    <PostBuildEvent Condition="'$(OS)' == 'Windows_NT' ">
 		XCOPY "$(ProjectDir)..\Dependencies" "$(TargetDir)" /S /Y
 	  </PostBuildEvent>
-	  <PostBuildEvent Condition="'$(OS)' != 'Windows_NT'">
+    <PostBuildEvent Condition="'$(OS)' != 'Windows_NT'">
 		cp -rf "$(ProjectDir)../Dependencies/." "$(TargetDir)"
 	  </PostBuildEvent>
   </PropertyGroup>

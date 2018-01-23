@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TeamStor.Engine.Coroutine;
 using TeamStor.Engine.Graphics;
 
 namespace TeamStor.Engine
@@ -12,7 +13,7 @@ namespace TeamStor.Engine
     /// State of the game (such as main menu, in-game, etc)
     /// </summary>
     public abstract class GameState
-    {
+    {        
         /// <summary>
         /// Game class of this state.
         /// </summary>
@@ -33,6 +34,11 @@ namespace TeamStor.Engine
         {
             get { return Game.Input; }
         }
+
+        /// <summary>
+        /// Coroutine manager.
+        /// </summary>
+        public CoroutineManager Coroutine { get; } = new CoroutineManager();
 
         /// <summary>
         /// Called when the state is entered.
