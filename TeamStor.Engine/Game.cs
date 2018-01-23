@@ -535,6 +535,10 @@ namespace TeamStor.Engine
                     y += 24;
                     
                     Batch.Text(SpriteBatch.FontStyle.Mono, 16, "Memory used: " + GC.GetTotalMemory(false) / 1024 / 1024 + " MB", new Vector2(10, y), Color.Aquamarine);
+                    y += 16;
+                    Batch.Text(SpriteBatch.FontStyle.Mono, 16, "Loaded assets in asset manager: " + Assets.LoadedAssets, new Vector2(10, y), Color.Aquamarine);
+                    y += 16;
+                    Batch.Text(SpriteBatch.FontStyle.Mono, 16, "Loaded state-specific assets in asset manager: " + Assets.StateLoadedAssets, new Vector2(10, y), Color.Aquamarine);
                     y += 24;
                 }
                 

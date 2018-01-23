@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Media;
@@ -43,6 +44,22 @@ namespace TeamStor.Engine
 		{
 			get;
 			private set;
+		}
+
+		/// <summary>
+		/// Amount of loaded assets.
+		/// </summary>
+		public int LoadedAssets
+		{
+			get { return _loadedAssets.Count; }
+		}
+		
+		/// <summary>
+		/// Amount of state-specific loaded assets.
+		/// </summary>
+		public int StateLoadedAssets
+		{
+			get { return _loadedAssets.Count(asset => !asset.Value.KeepAfterStateChange); }
 		}
 		
 		/// <param name="game">Game class.</param>
