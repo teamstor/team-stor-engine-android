@@ -69,7 +69,7 @@ namespace TeamStor.Engine
         {
             get
             {
-                return EaseWithType(EaseType, MathHelper.Clamp((float)(_game.Time - CompletionTime) / (float)_duration, 0f, 1f), _sourceValue, TargetValue - _sourceValue);
+                return EaseWithType(EaseType, MathHelper.Clamp((float)(_game.Time / CompletionTime), 0f, 1f), _sourceValue, TargetValue - _sourceValue);
             }
         }
 
