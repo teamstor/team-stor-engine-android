@@ -81,10 +81,10 @@ namespace TeamStor.Engine.Tween
 		public static Rectangle EaseWithType(TweenEaseType easeType, double amount, Rectangle startValue, Rectangle change)
 		{
 			return new Rectangle(
-				(float)TweenedDouble.EaseWithType(easeType, amount, startValue.X, change.X), 
-				(float)TweenedDouble.EaseWithType(easeType, amount, startValue.Y, change.Y), 
-				(float)TweenedDouble.EaseWithType(easeType, amount, startValue.Width, change.Height),
-				(float)TweenedDouble.EaseWithType(easeType, amount, startValue.Height, change.Height));
+				(int)TweenedDouble.EaseWithType(easeType, amount, startValue.X, change.X), 
+				(int)TweenedDouble.EaseWithType(easeType, amount, startValue.Y, change.Y), 
+				(int)TweenedDouble.EaseWithType(easeType, amount, startValue.Width, change.Height),
+				(int)TweenedDouble.EaseWithType(easeType, amount, startValue.Height, change.Height));
 		}
 		
 		public static implicit operator Rectangle(TweenedRectangle v)
