@@ -53,11 +53,26 @@ namespace TeamStor.Engine
 				return new Vector2(result.X, result.Y);
 			}
 		}
-		
-		/// <summary>
-		/// The amount the mouse moved since the last frame.
-		/// </summary>
-		public Vector2 MouseDelta
+
+        /// <summary>
+        /// Last position of the mouse.
+        /// </summary>
+        public Vector2 PreviousMousePosition
+        {
+            get
+            {
+                Point result = _lastState.Mouse.Position;
+                if(FixedUpdateMode)
+                    result = _fixedUpdateLastState.Mouse.Position;
+
+                return new Vector2(result.X, result.Y);
+            }
+        }
+
+        /// <summary>
+        /// The amount the mouse moved since the last frame.
+        /// </summary>
+        public Vector2 MouseDelta
 		{
 			get
 			{

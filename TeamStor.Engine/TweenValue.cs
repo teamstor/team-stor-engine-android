@@ -96,6 +96,17 @@ namespace TeamStor.Engine
         {
             get; private set;
         }
+
+        /// <summary>
+        /// If the current tween is completed.
+        /// </summary>
+        public bool IsComplete
+        {
+            get
+            {
+                return _game.Time >= CompletionTime
+            }
+        }
         
         public TweenValue(Game game, double initialValue)
         {
