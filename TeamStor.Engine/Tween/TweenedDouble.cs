@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TeamStor.Engine
+namespace TeamStor.Engine.Tween
 {
     public enum TweenEaseType
     {
@@ -40,7 +40,7 @@ namespace TeamStor.Engine
     /// Value that can be tweened to other values.
     /// Based on https://github.com/danro/jquery-easing/blob/master/jquery.easing.js
     /// </summary>
-    public class TweenedDouble
+    public struct TweenedDouble
     {
         private Game _game;
         private double _sourceValue;
