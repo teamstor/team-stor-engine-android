@@ -104,7 +104,7 @@ namespace TeamStor.Engine
         {
             get
             {
-                return _game.Time >= CompletionTime
+                return _game.Time >= CompletionTime;
             }
         }
         
