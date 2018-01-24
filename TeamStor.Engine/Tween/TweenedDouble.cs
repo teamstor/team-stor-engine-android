@@ -76,10 +76,7 @@ namespace TeamStor.Engine.Tween
         /// <summary>
         /// Current ease type.
         /// </summary>
-        public TweenEaseType EaseType
-        {
-            get; private set;
-        }
+        public TweenEaseType EaseType { get; private set; }
 
         /// <summary>
         /// If the current tween is completed.
@@ -100,6 +97,8 @@ namespace TeamStor.Engine.Tween
 
             _sourceValue = initialValue;
             TargetValue = initialValue;
+            
+            EaseType = TweenEaseType.Linear;
         }
 
         /// <summary>
