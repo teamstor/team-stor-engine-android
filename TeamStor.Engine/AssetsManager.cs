@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Media;
 using TeamStor.Engine.Graphics;
+using Microsoft.Xna.Framework;
 
 namespace TeamStor.Engine
 {
@@ -127,7 +128,16 @@ namespace TeamStor.Engine
 				{
 					using(FileStream stream = new FileStream(Directory + "/" + name, FileMode.Open))
 					{
-						asset = Texture2D.FromStream(Game.GraphicsDevice, stream) as T;
+						Texture2D texture = Texture2D.FromStream(Game.GraphicsDevice, stream);
+                        Color[] data = new Color[texture.Width * texture.Height];
+                        texture.GetData(data);
+
+                        for(int i = 0; i < data.Length; i++)
+                            data[i] = Color.FromNonPremultiplied(data[i].ToVector4());
+
+                        texture.SetData(data);
+
+                        asset = texture as T;
 						_loadedAssets.Add(name.ToLowerInvariant(), new LoadedAsset(asset, keepAfterStateChange));
 						return true;
 					}
