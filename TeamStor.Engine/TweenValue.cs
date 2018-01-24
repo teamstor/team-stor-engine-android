@@ -9,6 +9,8 @@ namespace TeamStor.Engine
 {
     public enum TweenEaseType
     {
+        Linear,
+
         EaseInQuad,
         EaseOutQuad,
         EaseInOutQuad,
@@ -126,6 +128,9 @@ namespace TeamStor.Engine
         {
             switch(easeType)
             {
+                case TweenEaseType.Linear:
+                    return MathHelper.Lerp((float)startValue, (float)startValue + (float)change, (float)amount);
+
                 case TweenEaseType.EaseInQuad:
                     return change * amount * amount + startValue;
                 case TweenEaseType.EaseOutQuad:
