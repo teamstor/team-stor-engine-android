@@ -46,7 +46,7 @@ namespace TeamStor.Engine.Internal
         {
         }
 
-        public override void Draw(SpriteBatch batch, Vector2 screenSize)
+        public override void Draw(Graphics.SpriteBatch batch, Vector2 screenSize)
         {
             batch.Rectangle(new Rectangle(0, 0, (int)screenSize.X, (int)screenSize.Y), Color.Black);
             

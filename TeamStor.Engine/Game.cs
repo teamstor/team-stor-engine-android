@@ -7,8 +7,8 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using TeamStor.Engine.Graphics;
 using TeamStor.Engine.Graphics;
 using SpriteBatch = TeamStor.Engine.Graphics.SpriteBatch;
 
@@ -95,7 +95,7 @@ namespace TeamStor.Engine
         /// <summary>
         /// The default sprite batch used by the game.
         /// </summary>
-        public SpriteBatch Batch
+        public Graphics.SpriteBatch Batch
         {
             get;
             private set;
@@ -361,7 +361,7 @@ namespace TeamStor.Engine
         
         protected override void LoadContent()
         {            
-            Batch = new SpriteBatch(this);
+            Batch = new Graphics.SpriteBatch(this);
             
             DefaultFonts.Normal = new Font(GraphicsDevice, Assets.Directory + "/engine/Roboto-Regular.ttf");
             DefaultFonts.Bold = new Font(GraphicsDevice, Assets.Directory + "/engine/Roboto-Bold.ttf");
