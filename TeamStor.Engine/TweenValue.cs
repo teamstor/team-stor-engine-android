@@ -106,6 +106,18 @@ namespace TeamStor.Engine
         }
 
         /// <summary>
+        /// Tweens the value to the new value.
+        /// </summary>
+        public void TweenTo(double newValue, TweenEaseType easeType, double duration = 1.0f)
+        {
+            _sourceValue = Value;
+            TargetValue = newValue;
+            CompletionTime = _game.Time + duration;
+            _duration = duration;
+            EaseType = easeType;
+        }
+
+        /// <summary>
         /// Eases with the specified ease type.
         /// </summary>
         public static double EaseWithType(TweenEaseType easeType, double amount, double startValue, double change)
