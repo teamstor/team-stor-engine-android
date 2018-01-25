@@ -168,9 +168,6 @@ namespace TeamStor.Engine.Graphics
                     if(itemsQueued)
                         End();
                     
-                    _rastState = new RasterizerState();
-                    _rastState.ScissorTestEnable = _scissor.HasValue;
-
                     _scissor = value;   
                     
                     if(itemsQueued)
@@ -248,7 +245,7 @@ namespace TeamStor.Engine.Graphics
             _emptyTexture = new Texture2D(game.GraphicsDevice, 1, 1);
             _emptyTexture.SetData(new Color[] { Color.White });
 
-            _rastState.ScissorTestEnable = false;
+            _rastState.ScissorTestEnable = true;
         }
 
         private void ResetSpriteBatch()
@@ -494,7 +491,7 @@ namespace TeamStor.Engine.Graphics
             _scissor = null;
             _renderTarget = null;
             _rastState = new RasterizerState();
-            _rastState.ScissorTestEnable = false;
+            _rastState.ScissorTestEnable = true;
             
             if(ItemsQueued)
                 End();
