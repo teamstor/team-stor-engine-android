@@ -53,6 +53,8 @@ namespace TeamStor.Engine.Tween
         {
             get
             {
+                if(_duration == 0)
+                    return TargetValue;
                 return EaseWithType(EaseType, MathHelper.Clamp(1.0f - (float)((CompletionTime - _game.Time) / _duration), 0f, 1f), _sourceValue, TargetValue - _sourceValue);
             }
         }
@@ -119,7 +121,7 @@ namespace TeamStor.Engine.Tween
         /// Eases with the specified ease type.
         /// </summary>
         public static double EaseWithType(TweenEaseType easeType, double amount, double startValue, double change)
-        {
+        {                
             switch(easeType)
             {
                 case TweenEaseType.Linear:
