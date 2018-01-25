@@ -246,6 +246,7 @@ namespace TeamStor.Engine.Graphics
             _emptyTexture.SetData(new Color[] { Color.White });
 
             _rastState.ScissorTestEnable = true;
+            _rastState.MultiSampleAntiAlias = true;
         }
 
         private void ResetSpriteBatch()
