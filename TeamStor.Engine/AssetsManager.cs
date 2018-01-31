@@ -107,13 +107,13 @@ namespace TeamStor.Engine
 		/// <returns>true if the asset was loaded</returns>
 		public bool TryLoadAsset<T>(string name, out T asset, bool keepAfterStateChange = false) where T : class, IDisposable
 		{
-			asset = null;
+            asset = null;
 
-			if(_loadedAssets.ContainsKey(name.ToLowerInvariant()))
+			if(_loadedAssets.ContainsKey(name))
 			{
-				if(_loadedAssets[name.ToLowerInvariant()].Asset is T)
+				if(_loadedAssets[name].Asset is T)
 				{
-					asset = (T)_loadedAssets[name.ToLowerInvariant()].Asset;
+					asset = (T)_loadedAssets[name].Asset;
 					return true;
 				}
 
@@ -139,7 +139,7 @@ namespace TeamStor.Engine
                         texture.SetData(data);
 
                         asset = texture as T;
-						_loadedAssets.Add(name.ToLowerInvariant(), new LoadedAsset(asset, keepAfterStateChange));
+						_loadedAssets.Add(name, new LoadedAsset(asset, keepAfterStateChange));
 						return true;
 					}
 				}
@@ -147,7 +147,7 @@ namespace TeamStor.Engine
 				if(typeof(T) == typeof(Font))
 				{
 					asset = new Font(Game.GraphicsDevice, Directory + "/" + name) as T;
-					_loadedAssets.Add(name.ToLowerInvariant(), new LoadedAsset(asset, keepAfterStateChange));
+					_loadedAssets.Add(name, new LoadedAsset(asset, keepAfterStateChange));
 					return true;
 				}
 				
@@ -156,7 +156,7 @@ namespace TeamStor.Engine
 					using(FileStream stream = new FileStream(Directory + "/" + name, FileMode.Open))
 					{
 						asset = SoundEffect.FromStream(stream) as T;
-						_loadedAssets.Add(name.ToLowerInvariant(), new LoadedAsset(asset, keepAfterStateChange));
+						_loadedAssets.Add(name, new LoadedAsset(asset, keepAfterStateChange));
 						return true;
 					}
 				}
@@ -169,14 +169,14 @@ namespace TeamStor.Engine
 						new[] { typeof(string) }, null);
 					asset = ctor.Invoke(new object[] { Directory + "/" + name }) as T;
 					
-					_loadedAssets.Add(name.ToLowerInvariant(), new LoadedAsset(asset, keepAfterStateChange));
+					_loadedAssets.Add(name, new LoadedAsset(asset, keepAfterStateChange));
 					return true;
 				}
 				
 				if(typeof(T) == typeof(Effect))
 				{
 					asset = new Effect(Game.GraphicsDevice, File.ReadAllBytes(Directory + "/" + name)) as T;
-					_loadedAssets.Add(name.ToLowerInvariant(), new LoadedAsset(asset, keepAfterStateChange));
+					_loadedAssets.Add(name, new LoadedAsset(asset, keepAfterStateChange));
 					return true;
 				}
 
