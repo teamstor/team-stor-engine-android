@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -222,9 +223,15 @@ namespace TeamStor.Engine.Graphics
             /// </summary>
             public int BatchEnds;
 
+            /// <summary>
+            /// Amount of time spent in End() (GPU drawing).
+            /// </summary>
+            public double TimeInEnd;
+
             public void Reset()
             {
                 DrawnTextures = BatchStarts = BatchEnds = 0;
+                TimeInEnd = 0;
             }
         }
 
@@ -462,6 +469,9 @@ namespace TeamStor.Engine.Graphics
         {
             if(ItemsQueued)
             {
+                Stopwatch watch = new Stopwatch();
+                watch.Start();
+                
                 if(Scissor.HasValue)
                     _game.GraphicsDevice.ScissorRectangle = Scissor.Value;
                 if(RenderTarget != null)
@@ -474,6 +484,9 @@ namespace TeamStor.Engine.Graphics
                     _game.GraphicsDevice.SetRenderTarget(null);
                 if(Scissor.HasValue)
                     _game.GraphicsDevice.ScissorRectangle = _game.GraphicsDevice.Viewport.Bounds;
+                
+                watch.Stop();
+                Stats.TimeInEnd += watch.Elapsed.TotalMilliseconds;
             }
 
             ItemsQueued = false;

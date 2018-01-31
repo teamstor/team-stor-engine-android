@@ -525,7 +525,9 @@ namespace TeamStor.Engine
                     y += 18;
                     Batch.Text(SpriteBatch.FontStyle.Mono, 16, "FixedUpdate " + Math.Round(_timeInFixedUpdate, 1) + " ms", new Vector2(10, y), Color.Aquamarine);
                     y += 18;
-                    Batch.Text(SpriteBatch.FontStyle.Mono, 16, "Draw " + Math.Round(_timeInDraw, 1) + " ms", new Vector2(10, y), Color.Aquamarine);
+                    Batch.Text(SpriteBatch.FontStyle.Mono, 16, "Draw (CPU) " + Math.Round(_timeInDraw - Batch.Stats.TimeInEnd, 1) + " ms", new Vector2(10, y), Color.Aquamarine);
+                    y += 18;
+                    Batch.Text(SpriteBatch.FontStyle.Mono, 16, "Draw (GPU) " + Math.Round(Batch.Stats.TimeInEnd, 1) + " ms", new Vector2(10, y), Color.Aquamarine);
                     y += 24;
                     
                     Batch.Text(SpriteBatch.FontStyle.Mono, 16, "Game state: " + (CurrentState == null ? "(none)" : CurrentState.GetType().Name), new Vector2(10, y), Color.Aquamarine);
@@ -552,7 +554,8 @@ namespace TeamStor.Engine
                     Batch.Text(SpriteBatch.FontStyle.Mono, 16, "Start() count: " + Batch.Stats.BatchStarts, new Vector2(10, y), Color.CadetBlue);
                     y += 18;
                     Batch.Text(SpriteBatch.FontStyle.Mono, 16, "End() count: " + Batch.Stats.BatchEnds, new Vector2(10, y), Color.CadetBlue);
-                    y += 24;
+                    y += 18;
+                    Batch.Text(SpriteBatch.FontStyle.Mono, 16, "Time spent in End() (GPU): " + Math.Round(Batch.Stats.TimeInEnd, 1) + " ms", new Vector2(10, y), Color.CadetBlue);
                 }
             }
             
