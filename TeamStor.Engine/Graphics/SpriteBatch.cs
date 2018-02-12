@@ -482,8 +482,8 @@ namespace TeamStor.Engine.Graphics
                 
                 if(RenderTarget != null)
                     _game.GraphicsDevice.SetRenderTarget(null);
-                if(Scissor.HasValue)
-                    _game.GraphicsDevice.ScissorRectangle = _game.GraphicsDevice.Viewport.Bounds;
+                
+                _game.GraphicsDevice.ScissorRectangle = _game.GraphicsDevice.Viewport.Bounds;
                 
                 watch.Stop();
                 Stats.TimeInEnd += watch.Elapsed.TotalMilliseconds;
