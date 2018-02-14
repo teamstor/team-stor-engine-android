@@ -383,8 +383,10 @@ namespace TeamStor.Engine
             DefaultFonts.ItalicBold.Dispose();
             DefaultFonts.Mono.Dispose();
             DefaultFonts.MonoBold.Dispose();
-        }
 
+            CurrentState = null;
+        }
+        
         protected override void Update(GameTime gameTime)
         {
             Stopwatch watch = new Stopwatch();
