@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using CoroutineEnumerator = System.Collections.Generic.IEnumerator<TeamStor.Engine.Coroutine.ICoroutineOperation>;
 
 namespace TeamStor.Engine.Coroutine
@@ -23,6 +24,7 @@ namespace TeamStor.Engine.Coroutine
 		/// <returns>The coroutine enumerator.</returns>
 		public CoroutineEnumerator AddExisting(CoroutineEnumerator enumerator)
 		{
+            Active.Add(enumerator);
 			return enumerator;
 		}
 		
