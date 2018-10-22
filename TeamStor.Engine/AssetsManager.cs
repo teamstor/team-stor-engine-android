@@ -17,15 +17,19 @@ namespace TeamStor.Engine
 	/// </summary>
 	public class AssetsManager : IDisposable
 	{
+        private FileSystemWatcher _watcher;
+
 		private struct LoadedAsset
 		{
-			public LoadedAsset(IDisposable asset, bool keepAfterStateChange)
+			public LoadedAsset(IDisposable asset, string path, bool keepAfterStateChange)
 			{
 				Asset = asset;
+                Path = path;
 				KeepAfterStateChange = keepAfterStateChange;
 			}
 			
 			public IDisposable Asset;
+            public string Path;
 			public bool KeepAfterStateChange;
 		}
 		
@@ -64,6 +68,14 @@ namespace TeamStor.Engine
 		{
 			get { return _loadedAssets.Count(asset => !asset.Value.KeepAfterStateChange); }
 		}
+
+        public class AssetChangedEventArgs : EventArgs
+        {
+            public string Name;
+            public IDisposable Asset;
+        }
+
+        public event EventHandler<AssetChangedEventArgs> AssetChanged;
 		
 		/// <param name="game">Game class.</param>
 		/// <param name="dir">The directory to load assets from.</param>
@@ -73,23 +85,50 @@ namespace TeamStor.Engine
 			Directory = dir;
 
 			Game.OnStateChange += OnStateChange;
+
+            _watcher = new FileSystemWatcher(Directory);
+            _watcher.EnableRaisingEvents = true;
+            _watcher.Changed += OnAssetChanged;
 		}
 
-		public void Dispose()
+        private void OnAssetChanged(object sender, FileSystemEventArgs e)
+        {
+            if(e.ChangeType == WatcherChangeTypes.Changed)
+            {
+                foreach(KeyValuePair<string, LoadedAsset> pair in _loadedAssets)
+                {
+                    if(Path.GetFullPath(e.FullPath).ToLowerInvariant() == Path.GetFullPath(Directory + "/" + pair.Value.Path).ToLowerInvariant())
+                    {
+                        ReloadAsset(pair.Value.Path);
+                        AssetChanged(this, new AssetChangedEventArgs() {
+                            Name = pair.Value.Path,
+                            Asset = _loadedAssets[pair.Value.Path.ToLowerInvariant()].Asset
+                        });
+                        break;
+                    }
+                }
+            }
+        }
+
+        public void Dispose()
 		{
 			foreach(KeyValuePair<string, LoadedAsset> asset in _loadedAssets)
 				asset.Value.Asset.Dispose();
 			
 			_loadedAssets.Clear();
-		}
-		
-		/// <summary>
-		/// Loads or gets an asset with the specified name and type.
-		/// </summary>
-		/// <param name="name">The name of the asset.</param>
-		/// <typeparam name="T">The type of the asset (can be Texture2D, Font, SoundEffect, Song or Effect)</typeparam>
-		/// <returns>The asset</returns>
-		public T Get<T>(string name, bool keepAfterStateChange = false) where T : class, IDisposable
+
+            Game.OnStateChange -= OnStateChange;
+
+            _watcher.Dispose();
+        }
+
+        /// <summary>
+        /// Loads or gets an asset with the specified name and type.
+        /// </summary>
+        /// <param name="name">The name of the asset.</param>
+        /// <typeparam name="T">The type of the asset (can be Texture2D, Font, SoundEffect, Song or Effect)</typeparam>
+        /// <returns>The asset</returns>
+        public T Get<T>(string name, bool keepAfterStateChange = false) where T : class, IDisposable
 		{
 			T asset = null;
 			if(TryLoadAsset<T>(name, out asset, keepAfterStateChange))
@@ -139,7 +178,7 @@ namespace TeamStor.Engine
                         texture.SetData(data);
 
                         asset = texture as T;
-						_loadedAssets.Add(name, new LoadedAsset(asset, keepAfterStateChange));
+						_loadedAssets.Add(name, new LoadedAsset(asset, name, keepAfterStateChange));
 						return true;
 					}
 				}
@@ -147,7 +186,7 @@ namespace TeamStor.Engine
 				if(typeof(T) == typeof(Font))
 				{
 					asset = new Font(Game.GraphicsDevice, Directory + "/" + name) as T;
-					_loadedAssets.Add(name, new LoadedAsset(asset, keepAfterStateChange));
+					_loadedAssets.Add(name, new LoadedAsset(asset, name, keepAfterStateChange));
 					return true;
 				}
 				
@@ -156,7 +195,7 @@ namespace TeamStor.Engine
 					using(FileStream stream = new FileStream(Directory + "/" + name, FileMode.Open))
 					{
 						asset = SoundEffect.FromStream(stream) as T;
-						_loadedAssets.Add(name, new LoadedAsset(asset, keepAfterStateChange));
+						_loadedAssets.Add(name, new LoadedAsset(asset, name, keepAfterStateChange));
 						return true;
 					}
 				}
@@ -169,14 +208,14 @@ namespace TeamStor.Engine
 						new[] { typeof(string) }, null);
 					asset = ctor.Invoke(new object[] { Directory + "/" + name }) as T;
 					
-					_loadedAssets.Add(name, new LoadedAsset(asset, keepAfterStateChange));
+					_loadedAssets.Add(name, new LoadedAsset(asset, name, keepAfterStateChange));
 					return true;
 				}
 				
 				if(typeof(T) == typeof(Effect))
 				{
 					asset = new Effect(Game.GraphicsDevice, File.ReadAllBytes(Directory + "/" + name)) as T;
-					_loadedAssets.Add(name, new LoadedAsset(asset, keepAfterStateChange));
+					_loadedAssets.Add(name, new LoadedAsset(asset, name, keepAfterStateChange));
 					return true;
 				}
 
@@ -189,12 +228,44 @@ namespace TeamStor.Engine
 			}
 		}
 
-		/// <summary>
-		/// Unloads an asset if it's loaded.
-		/// </summary>
-		/// <param name="name">The name of the asset.</param>
-		/// <returns>True if an asset was actually unloaded.</returns>
-		public bool UnloadAsset(string name)
+        /// <summary>
+        /// Reloads an asset if it's loaded.
+        /// </summary>
+        /// <param name="name">The name of the asset.</param>
+        /// <returns>True if an asset was actually reloaded.</returns>
+        public bool ReloadAsset(string name)
+        {
+            if(!_loadedAssets.ContainsKey(name.ToLowerInvariant()))
+                return false;
+
+            LoadedAsset oldAsset = _loadedAssets[name.ToLowerInvariant()];
+            UnloadAsset(name);
+
+            Texture2D o1;
+            Font o2;
+            SoundEffect o3;
+            Song o4;
+            Effect o5;
+
+            if(oldAsset.Asset is Texture2D)
+                return TryLoadAsset<Texture2D>(name, out o1, oldAsset.KeepAfterStateChange);
+            if(oldAsset.Asset is Font)
+                return TryLoadAsset<Font>(name, out o2, oldAsset.KeepAfterStateChange);
+            if(oldAsset.Asset is SoundEffect)
+                return TryLoadAsset<SoundEffect>(name, out o3, oldAsset.KeepAfterStateChange);
+            if(oldAsset.Asset is Song)
+                return TryLoadAsset<Song>(name, out o4, oldAsset.KeepAfterStateChange);
+            if(oldAsset.Asset is Effect)
+                return TryLoadAsset<Effect>(name, out o5, oldAsset.KeepAfterStateChange);
+            return false;
+        }
+
+        /// <summary>
+        /// Unloads an asset if it's loaded.
+        /// </summary>
+        /// <param name="name">The name of the asset.</param>
+        /// <returns>True if an asset was actually unloaded.</returns>
+        public bool UnloadAsset(string name)
 		{
 			if(!_loadedAssets.ContainsKey(name.ToLowerInvariant()))
 				return false;
