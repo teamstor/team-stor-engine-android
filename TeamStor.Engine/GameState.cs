@@ -8,6 +8,7 @@ using TeamStor.Engine.Coroutine;
 using TeamStor.Engine.Graphics;
 using TeamStor.Engine.Coroutine;
 using TeamStor.Engine.Graphics;
+using Microsoft.Xna.Framework.Input.Touch;
 
 namespace TeamStor.Engine
 {
@@ -30,9 +31,17 @@ namespace TeamStor.Engine
         }
 
         /// <summary>
-        /// Game input manager.
+        /// The previous input.
         /// </summary>
-        public InputManager Input
+        public TouchCollection LastInput
+        {
+            get { return Game.LastInput; }
+        }
+
+        /// <summary>
+        /// The current input.
+        /// </summary>
+        public TouchCollection Input
         {
             get { return Game.Input; }
         }

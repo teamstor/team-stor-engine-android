@@ -17,8 +17,6 @@ namespace TeamStor.Engine
 	/// </summary>
 	public class AssetsManager : IDisposable
 	{
-        private FileSystemWatcher _watcher;
-
 		private struct LoadedAsset
 		{
 			public LoadedAsset(IDisposable asset, string path, bool keepAfterStateChange)
@@ -26,11 +24,14 @@ namespace TeamStor.Engine
 				Asset = asset;
                 Path = path;
 				KeepAfterStateChange = keepAfterStateChange;
+                TrackedFile = null;
 			}
 			
 			public IDisposable Asset;
             public string Path;
 			public bool KeepAfterStateChange;
+
+            public string TrackedFile;
 		}
 		
 		private Dictionary<string, LoadedAsset> _loadedAssets = new Dictionary<string, LoadedAsset>();
@@ -39,15 +40,6 @@ namespace TeamStor.Engine
 		/// Game class.
 		/// </summary>
 		public Game Game
-		{
-			get;
-			private set;
-		}
-		
-		/// <summary>
-		/// The directory to load assets from.
-		/// </summary>
-		public string Directory
 		{
 			get;
 			private set;
@@ -68,58 +60,24 @@ namespace TeamStor.Engine
 		{
 			get { return _loadedAssets.Count(asset => !asset.Value.KeepAfterStateChange); }
 		}
-
-        public class AssetChangedEventArgs : EventArgs
-        {
-            public string Name;
-            public IDisposable Asset;
-        }
-
-        public event EventHandler<AssetChangedEventArgs> AssetChanged;
 		
 		/// <param name="game">Game class.</param>
 		/// <param name="dir">The directory to load assets from.</param>
-		public AssetsManager(Game game, string dir)
+		public AssetsManager(Game game)
 		{
 			Game = game;
-			Directory = dir;
-
-			Game.OnStateChange += OnStateChange;
-
-            _watcher = new FileSystemWatcher(Directory);
-            _watcher.EnableRaisingEvents = true;
-            _watcher.Changed += OnAssetChanged;
 		}
-
-        private void OnAssetChanged(object sender, FileSystemEventArgs e)
-        {
-            if(e.ChangeType == WatcherChangeTypes.Changed)
-            {
-                foreach(KeyValuePair<string, LoadedAsset> pair in _loadedAssets)
-                {
-                    if(Path.GetFullPath(e.FullPath).ToLowerInvariant() == Path.GetFullPath(Directory + "/" + pair.Value.Path).ToLowerInvariant())
-                    {
-                        ReloadAsset(pair.Value.Path);
-                        AssetChanged(this, new AssetChangedEventArgs() {
-                            Name = pair.Value.Path,
-                            Asset = _loadedAssets[pair.Value.Path.ToLowerInvariant()].Asset
-                        });
-                        break;
-                    }
-                }
-            }
-        }
 
         public void Dispose()
 		{
-			foreach(KeyValuePair<string, LoadedAsset> asset in _loadedAssets)
-				asset.Value.Asset.Dispose();
+            foreach(KeyValuePair<string, LoadedAsset> asset in _loadedAssets)
+            {
+                asset.Value.Asset.Dispose();
+                if(!string.IsNullOrEmpty(asset.Value.TrackedFile))
+                    File.Delete(asset.Value.TrackedFile);
+            }
 			
 			_loadedAssets.Clear();
-
-            Game.OnStateChange -= OnStateChange;
-
-            _watcher.Dispose();
         }
 
         /// <summary>
@@ -131,10 +89,11 @@ namespace TeamStor.Engine
         public T Get<T>(string name, bool keepAfterStateChange = false) where T : class, IDisposable
 		{
 			T asset = null;
-			if(TryLoadAsset<T>(name, out asset, keepAfterStateChange))
+            Exception errorReason;
+			if(TryLoadAsset<T>(name, out asset, out errorReason, keepAfterStateChange))
 				return asset;
 			
-			throw new Exception("Asset with name \"" + name + "\" couldn't be loaded.");
+			throw new Exception("Asset with name \"" + name + "\" couldn't be loaded.", errorReason);
 		}
 
 		/// <summary>
@@ -144,11 +103,12 @@ namespace TeamStor.Engine
 		/// <param name="asset">The returned asset, or null if it couldn't be loaded.</param>
 		/// <typeparam name="T">The type of the asset (can be Texture2D, Font, SoundEffect, Song or Effect)</typeparam>
 		/// <returns>true if the asset was loaded</returns>
-		public bool TryLoadAsset<T>(string name, out T asset, bool keepAfterStateChange = false) where T : class, IDisposable
+		public bool TryLoadAsset<T>(string name, out T asset, out Exception errorReason, bool keepAfterStateChange = false) where T : class, IDisposable
 		{
             asset = null;
+            errorReason = null;
 
-			if(_loadedAssets.ContainsKey(name))
+            if(_loadedAssets.ContainsKey(name))
 			{
 				if(_loadedAssets[name].Asset is T)
 				{
@@ -159,14 +119,11 @@ namespace TeamStor.Engine
 				return false;
 			}
 			
-			if(!File.Exists(Directory + "/" + name))
-				return false;
-
 			try
 			{
 				if(typeof(T) == typeof(Texture2D))
 				{
-					using(FileStream stream = new FileStream(Directory + "/" + name, FileMode.Open))
+					using(Stream stream = Game.Activity.Assets.Open(name))
 					{
 						Texture2D texture = Texture2D.FromStream(Game.GraphicsDevice, stream);
                         Color[] data = new Color[texture.Width * texture.Height];
@@ -182,17 +139,22 @@ namespace TeamStor.Engine
 						return true;
 					}
 				}
-				
-				if(typeof(T) == typeof(Font))
+
+
+                if(typeof(T) == typeof(Font))
 				{
-					asset = new Font(Game.GraphicsDevice, Directory + "/" + name) as T;
-					_loadedAssets.Add(name, new LoadedAsset(asset, name, keepAfterStateChange));
-					return true;
+                    using(Stream stream = Game.Activity.Assets.Open(name))
+                    {
+                        asset = new Font(Game.GraphicsDevice, stream) as T;
+                        _loadedAssets.Add(name, new LoadedAsset(asset, name, keepAfterStateChange));
+                        return true;
+                    }
 				}
+
 				
 				if(typeof(T) == typeof(SoundEffect))
 				{
-					using(FileStream stream = new FileStream(Directory + "/" + name, FileMode.Open))
+					using(Stream stream = Game.Activity.Assets.Open(name))
 					{
 						asset = SoundEffect.FromStream(stream) as T;
 						_loadedAssets.Add(name, new LoadedAsset(asset, name, keepAfterStateChange));
@@ -202,29 +164,48 @@ namespace TeamStor.Engine
 				
 				if(typeof(T) == typeof(Song))
 				{
-					// https://stackoverflow.com/questions/5813657/xna-4-song-fromuri-containing-spaces/5829463#5829463
-					ConstructorInfo ctor = typeof(Song).GetConstructor(
-						BindingFlags.NonPublic | BindingFlags.Instance, null,
-						new[] { typeof(string) }, null);
-					asset = ctor.Invoke(new object[] { Directory + "/" + name }) as T;
-					
-					_loadedAssets.Add(name, new LoadedAsset(asset, name, keepAfterStateChange));
-					return true;
+                    using(Stream stream = Game.Activity.Assets.Open(name))
+                    {
+                        MemoryStream s = new MemoryStream();
+                        stream.CopyTo(s);
+
+                        string file = System.IO.Path.GetTempPath() + name;
+                        if(!File.Exists(Path.GetDirectoryName(file)))
+                            System.IO.Directory.CreateDirectory(Path.GetDirectoryName(file));
+
+                        File.WriteAllBytes(file, s.ToArray());
+
+                        // https://stackoverflow.com/questions/5813657/xna-4-song-fromuri-containing-spaces/5829463#5829463
+                        ConstructorInfo ctor = typeof(Song).GetConstructor(
+                        BindingFlags.NonPublic | BindingFlags.Instance, null,
+                        new[] { typeof(string) }, null);
+                        asset = ctor.Invoke(new object[] { file }) as T;
+
+                        LoadedAsset a = new LoadedAsset(asset, name, keepAfterStateChange);
+                        a.TrackedFile = file;
+                        _loadedAssets.Add(name, a);
+                        return true;
+                    }
 				}
 				
 				if(typeof(T) == typeof(Effect))
 				{
-					asset = new Effect(Game.GraphicsDevice, File.ReadAllBytes(Directory + "/" + name)) as T;
-					_loadedAssets.Add(name, new LoadedAsset(asset, name, keepAfterStateChange));
-					return true;
+                    using(Stream stream = Game.Activity.Assets.Open(name))
+                    {
+                        MemoryStream s = new MemoryStream();
+                        stream.CopyTo(s);
+                        asset = new Effect(Game.GraphicsDevice, s.ToArray()) as T;
+                        _loadedAssets.Add(name, new LoadedAsset(asset, name, keepAfterStateChange));
+                        return true;
+                    }
 				}
 
 				return false;
 			}
 			catch(Exception e)
 			{
-				Console.WriteLine(e);
-				return false;
+                errorReason = e;
+                return false;
 			}
 		}
 
@@ -242,21 +223,25 @@ namespace TeamStor.Engine
             UnloadAsset(name);
 
             Texture2D o1;
+
             Font o2;
+
             SoundEffect o3;
             Song o4;
             Effect o5;
 
+            Exception errorReason;
+
             if(oldAsset.Asset is Texture2D)
-                return TryLoadAsset<Texture2D>(name, out o1, oldAsset.KeepAfterStateChange);
+                return TryLoadAsset<Texture2D>(name, out o1, out errorReason, oldAsset.KeepAfterStateChange);
             if(oldAsset.Asset is Font)
-                return TryLoadAsset<Font>(name, out o2, oldAsset.KeepAfterStateChange);
+                return TryLoadAsset<Font>(name, out o2, out errorReason, oldAsset.KeepAfterStateChange);
             if(oldAsset.Asset is SoundEffect)
-                return TryLoadAsset<SoundEffect>(name, out o3, oldAsset.KeepAfterStateChange);
+                return TryLoadAsset<SoundEffect>(name, out o3, out errorReason, oldAsset.KeepAfterStateChange);
             if(oldAsset.Asset is Song)
-                return TryLoadAsset<Song>(name, out o4, oldAsset.KeepAfterStateChange);
+                return TryLoadAsset<Song>(name, out o4, out errorReason, oldAsset.KeepAfterStateChange);
             if(oldAsset.Asset is Effect)
-                return TryLoadAsset<Effect>(name, out o5, oldAsset.KeepAfterStateChange);
+                return TryLoadAsset<Effect>(name, out o5, out errorReason, oldAsset.KeepAfterStateChange);
             return false;
         }
 
@@ -271,7 +256,9 @@ namespace TeamStor.Engine
 				return false;
 
 			_loadedAssets[name.ToLowerInvariant()].Asset.Dispose();
-			return true;
+            if(!string.IsNullOrEmpty(_loadedAssets[name.ToLowerInvariant()].TrackedFile))
+                File.Delete(_loadedAssets[name.ToLowerInvariant()].TrackedFile);
+            return true;
 		}
 
 		/// <summary>
@@ -305,7 +292,9 @@ namespace TeamStor.Engine
 					if(!asset.Value.KeepAfterStateChange)
 					{
 						asset.Value.Asset.Dispose();
-						toRemove.Add(asset.Key);
+                        if(!string.IsNullOrEmpty(asset.Value.TrackedFile))
+                            File.Delete(asset.Value.TrackedFile);
+                        toRemove.Add(asset.Key);
 					}
 				}
 

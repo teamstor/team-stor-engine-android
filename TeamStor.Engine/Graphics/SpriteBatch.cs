@@ -14,6 +14,11 @@ namespace TeamStor.Engine.Graphics
         private Microsoft.Xna.Framework.Graphics.SpriteBatch _monoGameSpriteBatch;
         private Texture2D _emptyTexture;
 
+        private Vector2 ScaleVec
+        {
+            get { return new Vector2((float)_game.Scale, (float)_game.Scale); }
+        }
+
         /// <summary>
         /// GraphicsDevice used by this SpriteBatch.
         /// </summary>
@@ -283,7 +288,7 @@ namespace TeamStor.Engine.Graphics
                 ResetSpriteBatch();
 
             Stats.DrawnTextures++;
-            _monoGameSpriteBatch.Draw(texture, new Vector2((int)pos.X, (int)pos.Y), crop, color, rotation, rotationOrigin.HasValue ? rotationOrigin.Value : Vector2.Zero, scale.HasValue ? scale.Value : Vector2.One, effect, 0f);
+            _monoGameSpriteBatch.Draw(texture, new Vector2((int)pos.X, (int)pos.Y) * ScaleVec, crop, color, rotation, rotationOrigin.HasValue ? rotationOrigin.Value : Vector2.Zero, (scale.HasValue ? scale.Value : Vector2.One) * ScaleVec, effect, 0f);
         }
         
         /// <summary>
@@ -302,7 +307,7 @@ namespace TeamStor.Engine.Graphics
                 ResetSpriteBatch();
 
             Stats.DrawnTextures++;
-            _monoGameSpriteBatch.Draw(texture, rectangle, crop, color, rotation, rotationOrigin.HasValue ? rotationOrigin.Value : Vector2.Zero, effect, 0f);
+            _monoGameSpriteBatch.Draw(texture, new Rectangle((int)(rectangle.X * ScaleVec.X), (int)(rectangle.Y * ScaleVec.Y), (int)(rectangle.Width * ScaleVec.X), (int)(rectangle.Height * ScaleVec.Y)), crop, color, rotation, rotationOrigin.HasValue ? rotationOrigin.Value : Vector2.Zero, effect, 0f);
         }
 
         /// <summary>
@@ -385,15 +390,16 @@ namespace TeamStor.Engine.Graphics
         /// <param name="thickness">The thickness of the circle.</param>
         public void Circle(Vector2 center, float size, Color color, int thickness = 1, float dividePrecision = 40)
         {
-            for(float i = -1f; i <= 0.9f; i += 1 / dividePrecision)
+            for(float i = -1f; i <= 0.9f; i += 1 / (dividePrecision * ScaleVec.X))
             {
                 Vector2 from = new Vector2(center.X + (float)Math.Sin(i * MathHelper.TwoPi) * size, center.Y + (float)Math.Cos(i * MathHelper.TwoPi) * size);
-                Vector2 to = new Vector2(center.X + (float)Math.Sin((i + (1 / dividePrecision) + 0.015f) * MathHelper.TwoPi) * size, center.Y + (float)Math.Cos((i + (1 / dividePrecision) + 0.015f) * MathHelper.TwoPi) * size);
+                Vector2 to = new Vector2(center.X + (float)Math.Sin((i + (1 / (dividePrecision * ScaleVec.X)) + 0.015f) * MathHelper.TwoPi) * size, center.Y + (float)Math.Cos((i + (1 / (dividePrecision * ScaleVec.X)) + 0.015f) * MathHelper.TwoPi) * size);
                 
                 Line(from, to, color, thickness);
             }
         }
-        
+
+
         /// <summary>
         /// Draws text with the specified font.
         /// </summary>
@@ -406,7 +412,11 @@ namespace TeamStor.Engine.Graphics
         /// <param name="spacing">The spacing multiplier.</param>
         public void Text(Font font, uint size, string text, Vector2 pos, Color color, float lineMult = 1.25f, float spacing = 1f)
         {
-            font.Draw(this, size, text, pos, color, lineMult, spacing);
+            Matrix oldTransform = Transform;
+            Transform *= Matrix.CreateScale(1.0f / (float)_game.Scale);
+            Transform *= Matrix.CreateTranslation(new Vector3(pos * ScaleVec, 0));
+            font.Draw(this, (uint)(size * _game.Scale), text, Vector2.Zero, color, lineMult, spacing);
+            Transform = oldTransform;
         }
         
         /// <summary>
@@ -462,6 +472,7 @@ namespace TeamStor.Engine.Graphics
             Text(font, size, text, pos, color, lineMult, spacing);
         }
 
+
         /// <summary>
         /// Draws all queued items.
         /// </summary>
@@ -473,7 +484,12 @@ namespace TeamStor.Engine.Graphics
                 watch.Start();
                 
                 if(Scissor.HasValue)
-                    _game.GraphicsDevice.ScissorRectangle = Scissor.Value;
+                    _game.GraphicsDevice.ScissorRectangle = new Rectangle(
+                        (int)(Scissor.Value.X * _game.Scale),
+                        (int)(Scissor.Value.Y * _game.Scale),
+                        (int)(Scissor.Value.Width * _game.Scale),
+                        (int)(Scissor.Value.Height * _game.Scale));
+
                 if(RenderTarget != null)
                     _game.GraphicsDevice.SetRenderTarget(RenderTarget);
 

@@ -1,7 +1,9 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -121,11 +123,20 @@ namespace TeamStor.Engine.Graphics
 			private set;
 		}
 		
-		public Font(GraphicsDevice device, string filename) : this(device, filename, DEFAULT_CHAR_MAP)
+		public Font(GraphicsDevice device, Stream stream) : this(device, stream, DEFAULT_CHAR_MAP)
 		{
 		}
 
-		public Font(GraphicsDevice device, string filename, char[] charMap)
+        private static byte[] ReadFully(Stream input)
+        {
+            using(MemoryStream ms = new MemoryStream())
+            {
+                input.CopyTo(ms);
+                return ms.ToArray();
+            }
+        }
+
+        public Font(GraphicsDevice device, Stream stream, char[] charMap)
 		{
 			CharacterMap = charMap;
 			
@@ -133,7 +144,7 @@ namespace TeamStor.Engine.Graphics
 				_sharpFontLibrary = new Library();
 			_sharpFontRefs++;
 			
-			_face = new Face(_sharpFontLibrary, filename);
+			_face = new Face(_sharpFontLibrary, ReadFully(stream), 0);
 			_device = device;
 		}
 
