@@ -164,28 +164,15 @@ namespace TeamStor.Engine
 				
 				if(typeof(T) == typeof(Song))
 				{
-                    using(Stream stream = Game.Activity.Assets.Open(name))
-                    {
-                        MemoryStream s = new MemoryStream();
-                        stream.CopyTo(s);
+                    // https://stackoverflow.com/questions/5813657/xna-4-song-fromuri-containing-spaces/5829463#5829463
+                    ConstructorInfo ctor = typeof(Song).GetConstructor(
+                    BindingFlags.NonPublic | BindingFlags.Instance, null,
+                    new[] { typeof(string) }, null);
+                    asset = ctor.Invoke(new object[] { name }) as T;
 
-                        string file = System.IO.Path.GetTempPath() + name;
-                        if(!File.Exists(Path.GetDirectoryName(file)))
-                            System.IO.Directory.CreateDirectory(Path.GetDirectoryName(file));
-
-                        File.WriteAllBytes(file, s.ToArray());
-
-                        // https://stackoverflow.com/questions/5813657/xna-4-song-fromuri-containing-spaces/5829463#5829463
-                        ConstructorInfo ctor = typeof(Song).GetConstructor(
-                        BindingFlags.NonPublic | BindingFlags.Instance, null,
-                        new[] { typeof(string) }, null);
-                        asset = ctor.Invoke(new object[] { file }) as T;
-
-                        LoadedAsset a = new LoadedAsset(asset, name, keepAfterStateChange);
-                        a.TrackedFile = file;
-                        _loadedAssets.Add(name, a);
-                        return true;
-                    }
+                    LoadedAsset a = new LoadedAsset(asset, name, keepAfterStateChange);
+                    _loadedAssets.Add(name, a);
+                    return true;
 				}
 				
 				if(typeof(T) == typeof(Effect))

@@ -321,7 +321,7 @@ namespace TeamStor.Engine
             
             _graphicsDeviceManager = new GraphicsDeviceManager(this);
             _graphicsDeviceManager.SupportedOrientations = DisplayOrientation.Portrait;
-            _graphicsDeviceManager.IsFullScreen = false;
+            _graphicsDeviceManager.IsFullScreen = true;
         }
         
         protected override void LoadContent()
