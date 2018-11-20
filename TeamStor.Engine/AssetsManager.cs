@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework.Media;
 using TeamStor.Engine.Graphics;
 using Microsoft.Xna.Framework;
 using TeamStor.Engine.Graphics;
+using MonoGame.Utilities.Png;
 
 namespace TeamStor.Engine
 {
@@ -93,7 +94,7 @@ namespace TeamStor.Engine
 			if(TryLoadAsset<T>(name, out asset, out errorReason, keepAfterStateChange))
 				return asset;
 			
-			throw new Exception("Asset with name \"" + name + "\" couldn't be loaded.", errorReason);
+			throw new Exception("Asset with name \"" + name + "\" couldn't be loaded (" + errorReason + ").", errorReason);
 		}
 
 		/// <summary>
@@ -125,7 +126,11 @@ namespace TeamStor.Engine
 				{
 					using(Stream stream = Game.Activity.Assets.Open(name))
 					{
-						Texture2D texture = Texture2D.FromStream(Game.GraphicsDevice, stream);
+                        MemoryStream copiedStream = new MemoryStream();
+                        stream.CopyTo(copiedStream);
+
+                        PngReader reader = new PngReader();
+                        Texture2D texture = reader.Read(copiedStream, Game.GraphicsDevice);
                         Color[] data = new Color[texture.Width * texture.Height];
                         texture.GetData(data);
 
