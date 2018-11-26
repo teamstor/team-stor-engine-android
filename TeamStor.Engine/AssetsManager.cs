@@ -137,9 +137,11 @@ namespace TeamStor.Engine
                         for(int i = 0; i < data.Length; i++)
                             data[i] = Color.FromNonPremultiplied(data[i].ToVector4());
 
-                        texture.SetData(data);
+                        Texture2D newTexture = new Texture2D(Game.GraphicsDevice, texture.Width, texture.Height);
+                        newTexture.SetData(data);
+                        texture.Dispose();
 
-                        asset = texture as T;
+                        asset = newTexture as T;
 						_loadedAssets.Add(name, new LoadedAsset(asset, name, keepAfterStateChange));
 						return true;
 					}
