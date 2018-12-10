@@ -413,9 +413,12 @@ namespace TeamStor.Engine.Graphics
         public void Text(Font font, uint size, string text, Vector2 pos, Color color, float lineMult = 1.25f, float spacing = 1f)
         {
             Matrix oldTransform = Transform;
-            Transform *= Matrix.CreateScale(1.0f / (float)_game.Scale);
-            Transform *= Matrix.CreateTranslation(new Vector3(pos * ScaleVec, 0));
+            Transform = Matrix.CreateScale(1.0f / (float)_game.Scale) * 
+                Matrix.CreateTranslation(new Vector3(pos * ScaleVec, 0)) * 
+                Transform;
+
             font.Draw(this, (uint)(size * _game.Scale), text, Vector2.Zero, color, lineMult, spacing);
+
             Transform = oldTransform;
         }
         
